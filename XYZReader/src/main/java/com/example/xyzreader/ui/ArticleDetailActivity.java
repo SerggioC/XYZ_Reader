@@ -1,12 +1,19 @@
 package com.example.xyzreader.ui;
 
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +26,7 @@ import com.example.xyzreader.data.ItemsContract;
 /**
  * An activity representing a single Article detail screen, letting you swipe between articles.
  */
-public class ArticleDetailActivity extends AppCompatActivity
-        implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
+public class ArticleDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private Cursor mCursor;
     private long mStartId;
@@ -64,9 +70,9 @@ public class ArticleDetailActivity extends AppCompatActivity
             public void onPageSelected(int position) {
                 if (mCursor != null) {
                     mCursor.moveToPosition(position);
+                    mSelectedItemId = mCursor.getLong(ArticleLoader.Query._ID);
+                    updateUpButtonPosition();
                 }
-                mSelectedItemId = mCursor.getLong(ArticleLoader.Query._ID);
-                updateUpButtonPosition();
             }
 
             @Override
@@ -117,12 +123,14 @@ public class ArticleDetailActivity extends AppCompatActivity
     }
 
     @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return ArticleLoader.newAllArticlesInstance(this);
     }
 
     @Override
-    public void onLoadFinished(@NonNull android.support.v4.content.Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
+
         mCursor = cursor;
         mPagerAdapter.notifyDataSetChanged();
 
@@ -141,19 +149,19 @@ public class ArticleDetailActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoaderReset(@NonNull android.support.v4.content.Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mCursor = null;
         mPagerAdapter.notifyDataSetChanged();
     }
-
 
     private void updateUpButtonPosition() {
         int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
         mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
     }
 
-    private class MyPagerAdapter extends android.support.v4.app.FragmentStatePagerAdapter {
-        public MyPagerAdapter(android.support.v4.app.FragmentManager fragmentManager) {
+
+    private class MyPagerAdapter extends FragmentStatePagerAdapter {
+        public MyPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
@@ -168,9 +176,10 @@ public class ArticleDetailActivity extends AppCompatActivity
         }
 
         @Override
-        public android.support.v4.app.Fragment getItem(int position) {
+        public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
-            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID));
+            long id = mCursor.getLong(ArticleLoader.Query._ID);
+            return ArticleDetailFragment.newInstance(id);
         }
 
         @Override

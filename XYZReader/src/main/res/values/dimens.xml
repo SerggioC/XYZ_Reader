@@ -1,7 +1,7 @@
 <resources>
     <!-- detail -->
     <dimen name="detail_title_text_size">32sp</dimen>
-    <dimen name="detail_body_text_size">22sp</dimen>
+    <dimen name="detail_body_text_size">16sp</dimen>
     <item name="detail_body_line_spacing_multiplier" format="float" type="fraction">1.2</item>
 
     <dimen name="fab_elevation">6dp</dimen>
@@ -9,5 +9,8 @@
     <dimen name="fab_margin">24dp</dimen>
     <dimen name="corner_radius">4dp</dimen>
     <dimen name="default_gap">8dp</dimen>
+    <dimen name="fab_size">56dp</dimen>
+    <dimen name="upButtonSize">56dp</dimen>
+    <dimen name="body_text_margin">4dp</dimen>
 
 </resources>

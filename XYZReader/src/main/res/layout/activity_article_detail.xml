@@ -16,7 +16,7 @@
 
         <ImageButton
             android:id="@+id/action_up"
-            android:layout_width="56dp"
+            android:layout_width="@dimen/upButtonSize"
             android:layout_height="?android:actionBarSize"
             android:background="?android:selectableItemBackgroundBorderless"
             android:contentDescription="@string/up"

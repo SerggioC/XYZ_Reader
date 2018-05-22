@@ -2,10 +2,14 @@ package com.example.xyzreader.ui;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.content.Loader;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -37,23 +41,19 @@ import java.util.List;
  * either contained in a {@link ArticleListActivity} in two-pane mode (on
  * tablets) or a {@link ArticleDetailActivity} on handsets.
  */
-public class ArticleDetailFragment extends android.support.v4.app.Fragment implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor> {
+public class ArticleDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String ARG_ITEM_ID = "item_id";
     private static final String TAG = "ArticleDetailFragment";
-    private static final float PARALLAX_FACTOR = 1.25f;
 
     private Cursor mCursor;
     private long mItemId;
     private View mRootView;
     private int mMutedColor = 0xFF333333;
-    private ObservableScrollView mScrollView;
 
-    private int mTopInset;
     private View mPhotoContainerView;
     private ImageView mPhotoView;
     private int mScrollY;
     private boolean mIsCard = false;
-    private int mStatusBarFullOpacityBottom;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
@@ -69,26 +69,12 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
     public ArticleDetailFragment() {
     }
 
-    public static android.support.v4.app.Fragment newInstance(long itemId) {
+    public static Fragment newInstance(long itemId) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
-    }
-
-    static float progress(float v, float min, float max) {
-        return constrain((v - min) / (max - min), 0, 1);
-    }
-
-    static float constrain(float val, float min, float max) {
-        if (val < min) {
-            return min;
-        } else if (val > max) {
-            return max;
-        } else {
-            return val;
-        }
     }
 
     @Override
@@ -100,8 +86,6 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
         }
 
         mIsCard = getResources().getBoolean(R.bool.detail_is_card);
-        mStatusBarFullOpacityBottom = getResources().getDimensionPixelSize(
-                R.dimen.detail_card_top_margin);
         setHasOptionsMenu(true);
     }
 
@@ -117,7 +101,7 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
         // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
         // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
         // we do this in onActivityCreated.
-        getActivity().getSupportLoaderManager().initLoader(0, null, this);
+        this.getActivity().getSupportLoaderManager().initLoader(0, null, this);
     }
 
     @Override
@@ -126,7 +110,6 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
 
         mPhotoView = mRootView.findViewById(R.id.photo);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
-
 
         mRootView.findViewById(R.id.share_fab).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,15 +123,15 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
 
         RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
         bodyDataRecyclerView.setHasFixedSize(true);
-        bodyDataRecyclerView.setLayoutManager(new LinearLayoutManager(mRootView.getContext(), LinearLayoutManager.VERTICAL, false));
-        bodyDataAdapter = new BodyDataAdapter(mRootView.getContext(), null);
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mRootView.getContext(), LinearLayoutManager.VERTICAL, false);
+        bodyDataRecyclerView.setLayoutManager(linearLayoutManager);
+        bodyDataAdapter = new BodyDataAdapter(mRootView.getContext());
         bodyDataRecyclerView.setAdapter(bodyDataAdapter);
 
         bindViews();
 
         return mRootView;
     }
-
 
     private Date parsePublishedDate() {
         try {
@@ -167,9 +150,6 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
         TextView titleView = mRootView.findViewById(R.id.article_title);
         TextView bylineView = mRootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
-//        TextView bodyView = mRootView.findViewById(R.id.article_body);
-//        bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
-//TODO fonts
 
         if (mCursor != null) {
             mRootView.setAlpha(0);
@@ -196,10 +176,10 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
 
             }
 
-
             String bodyData = mCursor.getString(ArticleLoader.Query.BODY);
             List<String> bodyDataList = Arrays.asList(bodyData.split("(\r\n|\n)"));
-            bodyDataAdapter.swapBodyDataList(bodyDataList);
+            List<String> subBodyDataList = bodyDataList.subList(0, 50);
+            bodyDataAdapter.swapBodyDataList(subBodyDataList);
 
             //bodyView.setText(Html.fromHtml(bodyData.replaceAll("(\r\n|\n)", "<br />")));
             ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
@@ -233,16 +213,17 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
     }
 
     @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
     }
 
     @Override
-    public void onLoadFinished(@NonNull android.support.v4.content.Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
         if (!isAdded()) {
             if (cursor != null) cursor.close();
             return;
         }
+        Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
 
         mCursor = cursor;
         if (mCursor != null && !mCursor.moveToFirst()) {
@@ -255,11 +236,10 @@ public class ArticleDetailFragment extends android.support.v4.app.Fragment imple
     }
 
     @Override
-    public void onLoaderReset(@NonNull android.support.v4.content.Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mCursor = null;
         bindViews();
     }
-
 
     public int getUpButtonFloor() {
         if (mPhotoContainerView == null || mPhotoView.getHeight() == 0) {

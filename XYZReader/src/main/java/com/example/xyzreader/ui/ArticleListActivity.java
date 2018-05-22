@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -170,15 +171,16 @@ public class ArticleListActivity extends AppCompatActivity implements android.su
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = getLayoutInflater().inflate(R.layout.list_item_article, parent, false);
-            final ViewHolder vh = new ViewHolder(view);
+            final ViewHolder viewHolder = new ViewHolder(view);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    long itemId = getItemId(viewHolder.getAdapterPosition());
+                    Uri uri = ItemsContract.Items.buildItemUri(itemId);
+                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 }
             });
-            return vh;
+            return viewHolder;
         }
 
         private Date parsePublishedDate() {
