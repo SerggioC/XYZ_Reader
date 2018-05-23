@@ -23,11 +23,14 @@ import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 
+import java.lang.ref.WeakReference;
+
 /**
  * An activity representing a single Article detail screen, letting you swipe between articles.
  */
 public class ArticleDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final String EXTRA_CURRENT_ID = "current_id_extra";
     private Cursor mCursor;
     private long mStartId;
 
@@ -36,7 +39,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
     private int mTopInset;
 
     private ViewPager mPager;
-    private MyPagerAdapter mPagerAdapter;
+    private FragmentPagerAdapter mPagerAdapter;
     private View mUpButtonContainer;
     private View mUpButton;
     private ViewPager.OnPageChangeListener onPageChangeListener;
@@ -53,18 +56,9 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
 
         getSupportLoaderManager().initLoader(0, null, this);
 
-        mPagerAdapter = new MyPagerAdapter(getSupportFragmentManager());
         mPager = findViewById(R.id.pager);
-        mPager.setAdapter(mPagerAdapter);
-        mPager.setPageMargin((int) TypedValue
-                .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
-        mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
 
-        onPageChangeListener = new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
+        onPageChangeListener = new ViewPager.SimpleOnPageChangeListener() {
 
             @Override
             public void onPageSelected(int position) {
@@ -112,7 +106,15 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
                 mStartId = ItemsContract.Items.getItemId(getIntent().getData());
                 mSelectedItemId = mStartId;
             }
+        } else {
+            mSelectedItemId = savedInstanceState.getLong(EXTRA_CURRENT_ID);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(EXTRA_CURRENT_ID, mSelectedItemId);
     }
 
     @Override
@@ -132,15 +134,23 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
         Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
 
         mCursor = cursor;
-        mPagerAdapter.notifyDataSetChanged();
 
         // Select the start ID
         if (mStartId > 0) {
             mCursor.moveToFirst();
             while (mCursor.moveToNext()) {
                 if (mCursor.getLong(ArticleLoader.Query._ID) == mStartId) {
+                    mPagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager(), cursor);
+                    mPager.setAdapter(mPagerAdapter);
+                    mPager.setPageMargin((int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
+                    mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
+
                     final int position = mCursor.getPosition();
                     mPager.setCurrentItem(position, false);
+
+                    mPagerAdapter.notifyDataSetChanged();
+
                     break;
                 }
             }
@@ -160,9 +170,12 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
     }
 
 
-    private class MyPagerAdapter extends FragmentStatePagerAdapter {
-        public MyPagerAdapter(FragmentManager fragmentManager) {
+    private class FragmentPagerAdapter extends FragmentStatePagerAdapter {
+        private WeakReference<Cursor> weakCursor;
+
+        public FragmentPagerAdapter(FragmentManager fragmentManager, Cursor cursor) {
             super(fragmentManager);
+            weakCursor = new WeakReference<>(cursor);
         }
 
         @Override
@@ -177,14 +190,14 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
 
         @Override
         public Fragment getItem(int position) {
-            mCursor.moveToPosition(position);
-            long id = mCursor.getLong(ArticleLoader.Query._ID);
+            weakCursor.get().moveToPosition(position);
+            long id = weakCursor.get().getLong(ArticleLoader.Query._ID);
             return ArticleDetailFragment.newInstance(id);
         }
 
         @Override
         public int getCount() {
-            return (mCursor != null) ? mCursor.getCount() : 0;
+            return (weakCursor.get() != null) ? weakCursor.get().getCount() : 0;
         }
     }
 }
