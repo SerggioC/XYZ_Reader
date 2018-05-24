@@ -65,6 +65,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
                 if (mCursor != null) {
                     mCursor.moveToPosition(position);
                     mSelectedItemId = mCursor.getLong(ArticleLoader.Query._ID);
+                    mPager.setCurrentItem(position, true);
                     updateUpButtonPosition();
                 }
             }
@@ -80,14 +81,11 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
         mPager.addOnPageChangeListener(onPageChangeListener);
 
 
-
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         int marginPixels = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, displayMetrics);
         mPager.setPageMargin(marginPixels);
 
         mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
-
-
 
 
         mUpButton = findViewById(R.id.action_up);
@@ -151,7 +149,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
                     mPager.setAdapter(mPagerAdapter);
 
                     int position = cursor.getPosition();
-                    mPager.setCurrentItem(position, false);
+                    mPager.setCurrentItem(position, true);
 
                     break;
                 }

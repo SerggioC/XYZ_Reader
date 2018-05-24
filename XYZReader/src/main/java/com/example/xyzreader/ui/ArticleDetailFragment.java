@@ -87,6 +87,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         mIsCard = getResources().getBoolean(R.bool.detail_is_card);
         setHasOptionsMenu(true);
+
     }
 
     public ArticleDetailActivity getActivityCast() {
@@ -101,7 +102,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
         // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
         // we do this in onActivityCreated.
-        this.getActivity().getSupportLoaderManager().initLoader(0, null, this);
+        this.getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
@@ -142,6 +143,47 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         }
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        if (!isAdded()) {
+            if (cursor != null) cursor.close();
+            return;
+        }
+        Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
+
+        mCursor = cursor;
+        if (mCursor != null && !mCursor.moveToFirst()) {
+            Log.e(TAG, "Error reading item detail cursor");
+            mCursor.close();
+            mCursor = null;
+        }
+
+        bindViews();
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        mCursor = null;
+        bindViews();
+    }
+
+    public int getUpButtonFloor() {
+        if (mPhotoContainerView == null || mPhotoView.getHeight() == 0) {
+            return Integer.MAX_VALUE;
+        }
+
+        // account for parallax
+        return mIsCard
+                ? (int) mPhotoContainerView.getTranslationY() + mPhotoView.getHeight() - mScrollY
+                : mPhotoView.getHeight() - mScrollY;
+    }
+
+
     private void bindViews() {
         if (mRootView == null) return;
 
@@ -150,6 +192,10 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         bylineView.setMovementMethod(new LinkMovementMethod());
 
         if (mCursor != null) {
+
+            Log.w("Sergio>", this + "mCursor= " + DatabaseUtils.dumpCursorToString(mCursor));
+
+
             mRootView.setAlpha(0);
             mRootView.setVisibility(View.VISIBLE);
             mRootView.animate().alpha(1);
@@ -210,43 +256,4 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         }
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-        if (!isAdded()) {
-            if (cursor != null) cursor.close();
-            return;
-        }
-        Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
-
-        mCursor = cursor;
-        if (mCursor != null && !mCursor.moveToFirst()) {
-            Log.e(TAG, "Error reading item detail cursor");
-            mCursor.close();
-            mCursor = null;
-        }
-
-        bindViews();
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mCursor = null;
-        bindViews();
-    }
-
-    public int getUpButtonFloor() {
-        if (mPhotoContainerView == null || mPhotoView.getHeight() == 0) {
-            return Integer.MAX_VALUE;
-        }
-
-        // account for parallax
-        return mIsCard
-                ? (int) mPhotoContainerView.getTranslationY() + mPhotoView.getHeight() - mScrollY
-                : mPhotoView.getHeight() - mScrollY;
-    }
 }

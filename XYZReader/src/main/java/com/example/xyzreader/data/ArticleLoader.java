@@ -13,11 +13,13 @@ public class ArticleLoader extends CursorLoader {
     }
 
     public static ArticleLoader newAllArticlesInstance(Context context) {
-        return new ArticleLoader(context, ItemsContract.Items.buildDirUri());
+        Uri uri = ItemsContract.Items.buildDirUri();
+        return new ArticleLoader(context, uri);
     }
 
     public static ArticleLoader newInstanceForItemId(Context context, long itemId) {
-        return new ArticleLoader(context, ItemsContract.Items.buildItemUri(itemId));
+        Uri uri = ItemsContract.Items.buildItemUri(itemId);
+        return new ArticleLoader(context, uri);
     }
 
     public interface Query {

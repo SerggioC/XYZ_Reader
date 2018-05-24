@@ -1,5 +1,6 @@
 package com.example.xyzreader.ui;
 
+import android.animation.Animator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -173,9 +175,15 @@ public class ArticleListActivity extends AppCompatActivity implements android.su
             View view = getLayoutInflater().inflate(R.layout.list_item_article, parent, false);
             final ViewHolder viewHolder = new ViewHolder(view);
             view.setOnClickListener(v -> {
+
                 long itemId = getItemId(viewHolder.getAdapterPosition());
                 Uri uri = ItemsContract.Items.buildItemUri(itemId);
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
+
+                // Create circular reveal animation on item click
+                int finalRadius = (int) Math.hypot(view.getWidth() / 2, view.getHeight() / 2);
+                Animator circularReveal = ViewAnimationUtils.createCircularReveal(view, view.getWidth() / 2, view.getHeight() / 2, 0, finalRadius);
+                circularReveal.start();
             });
             return viewHolder;
         }
