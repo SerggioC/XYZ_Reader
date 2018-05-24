@@ -108,9 +108,9 @@ public class ArticleListActivity extends AppCompatActivity implements android.su
 
     @Override
     public void onLoadFinished(@NonNull android.support.v4.content.Loader<Cursor> loader, Cursor cursor) {
-        Adapter adapter = new Adapter(cursor);
-        adapter.setHasStableIds(true);
-        mRecyclerView.setAdapter(adapter);
+        ArticleAdapter articleAdapter = new ArticleAdapter(cursor);
+        articleAdapter.setHasStableIds(true);
+        mRecyclerView.setAdapter(articleAdapter);
         int columnCount = getResources().getInteger(R.integer.list_column_count);
         StaggeredGridLayoutManager layoutManager =
                 new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
@@ -155,10 +155,10 @@ public class ArticleListActivity extends AppCompatActivity implements android.su
         }
     }
 
-    private class Adapter extends RecyclerView.Adapter<ViewHolder> {
+    private class ArticleAdapter extends RecyclerView.Adapter<ViewHolder> {
         private Cursor mCursor;
 
-        public Adapter(Cursor cursor) {
+        public ArticleAdapter(Cursor cursor) {
             mCursor = cursor;
         }
 
@@ -172,13 +172,10 @@ public class ArticleListActivity extends AppCompatActivity implements android.su
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = getLayoutInflater().inflate(R.layout.list_item_article, parent, false);
             final ViewHolder viewHolder = new ViewHolder(view);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    long itemId = getItemId(viewHolder.getAdapterPosition());
-                    Uri uri = ItemsContract.Items.buildItemUri(itemId);
-                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                }
+            view.setOnClickListener(v -> {
+                long itemId = getItemId(viewHolder.getAdapterPosition());
+                Uri uri = ItemsContract.Items.buildItemUri(itemId);
+                startActivity(new Intent(Intent.ACTION_VIEW, uri));
             });
             return viewHolder;
         }

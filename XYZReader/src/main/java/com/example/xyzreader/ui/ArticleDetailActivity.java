@@ -13,11 +13,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowInsets;
 
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
@@ -79,25 +79,28 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
 
         mPager.addOnPageChangeListener(onPageChangeListener);
 
+
+
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        int marginPixels = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, displayMetrics);
+        mPager.setPageMargin(marginPixels);
+
+        mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
+
+
+
+
         mUpButton = findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onSupportNavigateUp();
-            }
-        });
+        mUpButton.setOnClickListener(view -> onSupportNavigateUp());
 
         mUpButtonContainer = findViewById(R.id.up_container);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-                @Override
-                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
-                    view.onApplyWindowInsets(windowInsets);
-                    mTopInset = windowInsets.getSystemWindowInsetTop();
-                    mUpButtonContainer.setTranslationY(mTopInset);
-                    updateUpButtonPosition();
-                    return windowInsets;
-                }
+            mUpButtonContainer.setOnApplyWindowInsetsListener((view, windowInsets) -> {
+                view.onApplyWindowInsets(windowInsets);
+                mTopInset = windowInsets.getSystemWindowInsetTop();
+                mUpButtonContainer.setTranslationY(mTopInset);
+                updateUpButtonPosition();
+                return windowInsets;
             });
         }
 
@@ -130,7 +133,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
     }
 
     @Override
-    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, final Cursor cursor) {
         Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
 
         mCursor = cursor;
@@ -138,18 +141,17 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
         // Select the start ID
         if (mStartId > 0) {
             mCursor.moveToFirst();
-            while (mCursor.moveToNext()) {
-                if (mCursor.getLong(ArticleLoader.Query._ID) == mStartId) {
-                    mPagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager(), cursor);
-                    mPager.setAdapter(mPagerAdapter);
-                    mPager.setPageMargin((int) TypedValue
-                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
-                    mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
+            while (cursor.moveToNext()) {
+                if (cursor.getLong(ArticleLoader.Query._ID) == mStartId) {
+                    mPagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager());
 
-                    final int position = mCursor.getPosition();
-                    mPager.setCurrentItem(position, false);
-
+                    mPagerAdapter.swapCursor(cursor);
                     mPagerAdapter.notifyDataSetChanged();
+
+                    mPager.setAdapter(mPagerAdapter);
+
+                    int position = cursor.getPosition();
+                    mPager.setCurrentItem(position, false);
 
                     break;
                 }
@@ -160,7 +162,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mCursor = null;
+        mPagerAdapter.swapCursor(null);
         mPagerAdapter.notifyDataSetChanged();
     }
 
@@ -173,8 +175,11 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
     private class FragmentPagerAdapter extends FragmentStatePagerAdapter {
         private WeakReference<Cursor> weakCursor;
 
-        public FragmentPagerAdapter(FragmentManager fragmentManager, Cursor cursor) {
+        public FragmentPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
+        }
+
+        public void swapCursor(Cursor cursor) {
             weakCursor = new WeakReference<>(cursor);
         }
 

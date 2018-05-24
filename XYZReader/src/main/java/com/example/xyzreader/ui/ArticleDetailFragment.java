@@ -69,7 +69,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     public ArticleDetailFragment() {
     }
 
-    public static Fragment newInstance(long itemId) {
+    public static ArticleDetailFragment newInstance(long itemId) {
         Bundle arguments = new Bundle();
         arguments.putLong(ARG_ITEM_ID, itemId);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
@@ -111,15 +111,13 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         mPhotoView = mRootView.findViewById(R.id.photo);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
-        mRootView.findViewById(R.id.share_fab).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(getActivity())
-                        .setType("text/plain")
-                        .setText("Some sample text")
-                        .getIntent(), getString(R.string.action_share)));
-            }
-        });
+        mRootView.findViewById(R.id.share_fab).setOnClickListener(view ->
+                startActivity(Intent
+                        .createChooser(ShareCompat.IntentBuilder.from(getActivity())
+                                .setType("text/plain")
+                                .setText("Some sample text")
+                                .getIntent(), getString(R.string.action_share)))
+        );
 
         RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
         bodyDataRecyclerView.setHasFixedSize(true);
