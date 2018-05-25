@@ -90,6 +90,7 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.widget.NestedScrollView
+        android:id="@+id/nested_scrollview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="@dimen/default_gap"
@@ -101,7 +102,7 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/article_body_recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:nestedScrollingEnabled="false"
             android:scrollbars="vertical"
             tools:listitem="@layout/simple_textview"/>
@@ -122,5 +123,15 @@
         app:elevation="@dimen/fab_elevation"
         app:fabSize="normal"
         app:pressedTranslationZ="@dimen/fab_elevation"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:layout_anchor="@id/toolbar"
+        app:layout_anchorGravity="bottom"
+        android:layout_gravity="bottom"/>
 
 </android.support.design.widget.CoordinatorLayout>

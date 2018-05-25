@@ -23,6 +23,7 @@ public class BodyDataAdapter extends RecyclerView.Adapter<BodyDataAdapter.BodyVi
 
     public void swapBodyDataList(List<String> bodyDataList) {
         this.bodyDataList = bodyDataList;
+        notifyDataSetChanged();
     }
 
     @NonNull

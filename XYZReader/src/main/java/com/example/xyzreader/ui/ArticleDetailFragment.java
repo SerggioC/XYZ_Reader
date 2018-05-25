@@ -2,7 +2,6 @@ package com.example.xyzreader.ui;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.VolleyError;
@@ -44,6 +45,9 @@ import java.util.List;
 public class ArticleDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String ARG_ITEM_ID = "item_id";
     private static final String TAG = "ArticleDetailFragment";
+    private static final int CHUNK_SIZE = 10;
+    private int FROM_INDEX = 0;
+    private int TO_INDEX = CHUNK_SIZE;
 
     private Cursor mCursor;
     private long mItemId;
@@ -61,6 +65,10 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     // Most time functions can only handle 1902 - 2037
     private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
     private BodyDataAdapter bodyDataAdapter;
+    private boolean loadmore = true;
+    private List<String> bodyDataList;
+    private int dataListSize;
+    private ProgressBar progressBar;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -120,10 +128,59 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                                 .getIntent(), getString(R.string.action_share)))
         );
 
+        progressBar = mRootView.findViewById(R.id.progressBar);
+
         RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
-        bodyDataRecyclerView.setHasFixedSize(true);
+        bodyDataRecyclerView.setHasFixedSize(false);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mRootView.getContext(), LinearLayoutManager.VERTICAL, false);
+
         bodyDataRecyclerView.setLayoutManager(linearLayoutManager);
+
+        NestedScrollView nestedScrollView = mRootView.findViewById(R.id.nested_scrollview);
+
+        // Code to fetch more data incrementally and increase activity load time.
+        nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (scrollView, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if(scrollView.getChildAt(scrollView.getChildCount() - 1) != null) {
+                if ((scrollY >= (scrollView.getChildAt(scrollView.getChildCount() - 1).getMeasuredHeight() - scrollView.getMeasuredHeight())) &&
+                        scrollY > oldScrollY) {
+
+                    int lastVisiblePosition = linearLayoutManager.findLastVisibleItemPosition();
+                    if (lastVisiblePosition >= bodyDataRecyclerView.getChildCount() - 1) {
+                        // Reached the bottom of RecyclerView
+                        if (loadmore) {
+                            TO_INDEX += CHUNK_SIZE;
+                            if (TO_INDEX >= dataListSize) {
+                                TO_INDEX = dataListSize - 1;
+                                loadmore = false;
+                            } else {
+                                loadmore = true;
+                            }
+                            List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
+                            bodyDataAdapter.swapBodyDataList(subBodyDataList);
+                        }
+                    }
+
+                }
+
+                if (scrollY > oldScrollY) {
+                    Log.w(TAG, "Scroll UP");
+                }
+                if (scrollY < oldScrollY) {
+                    Log.w(TAG, "Scroll DOWN");
+                }
+
+                if (scrollY == 0) {
+                    Log.w(TAG, "TOP SCROLL");
+                }
+
+                if (scrollY == ( scrollView.getChildAt(0).getMeasuredHeight() - scrollView.getMeasuredHeight() )) {
+                    Log.w(TAG, "BOTTOM SCROLL");
+                }
+
+
+
+            }
+        });
         bodyDataAdapter = new BodyDataAdapter(mRootView.getContext());
         bodyDataRecyclerView.setAdapter(bodyDataAdapter);
 
@@ -154,7 +211,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             if (cursor != null) cursor.close();
             return;
         }
-        Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
 
         mCursor = cursor;
         if (mCursor != null && !mCursor.moveToFirst()) {
@@ -193,9 +249,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         if (mCursor != null) {
 
-            Log.w("Sergio>", this + "mCursor= " + DatabaseUtils.dumpCursorToString(mCursor));
-
-
             mRootView.setAlpha(0);
             mRootView.setVisibility(View.VISIBLE);
             mRootView.animate().alpha(1);
@@ -221,11 +274,12 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             }
 
             String bodyData = mCursor.getString(ArticleLoader.Query.BODY);
-            List<String> bodyDataList = Arrays.asList(bodyData.split("(\r\n|\n)"));
-            List<String> subBodyDataList = bodyDataList.subList(0, 50);
+            bodyDataList = Arrays.asList(bodyData.split("(\r\n\r\n)"));
+            dataListSize = bodyDataList.size();
+            List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
             bodyDataAdapter.swapBodyDataList(subBodyDataList);
 
-            //bodyView.setText(Html.fromHtml(bodyData.replaceAll("(\r\n|\n)", "<br />")));
+
             ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
                     .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
                         @Override

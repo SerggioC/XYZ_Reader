@@ -11,6 +11,6 @@
     <dimen name="default_gap">8dp</dimen>
     <dimen name="fab_size">56dp</dimen>
     <dimen name="upButtonSize">56dp</dimen>
-    <dimen name="body_text_margin">4dp</dimen>
+    <dimen name="body_text_margin">8dp</dimen>
 
 </resources>

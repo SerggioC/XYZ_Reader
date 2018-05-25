@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingLeft="@dimen/body_text_margin"
-    android:paddingRight="4dp"
+    android:paddingRight="@dimen/body_text_margin"
     tools:text="@tools:sample/full_names">
 
 </TextView>

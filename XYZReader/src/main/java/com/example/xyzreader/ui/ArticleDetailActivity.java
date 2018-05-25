@@ -1,7 +1,6 @@
 package com.example.xyzreader.ui;
 
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +37,7 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
     private int mTopInset;
 
     private ViewPager mPager;
-    private FragmentPagerAdapter mPagerAdapter;
+    private FragmentPagerAdapter fragmentPagerAdapter;
     private View mUpButtonContainer;
     private View mUpButton;
     private ViewPager.OnPageChangeListener onPageChangeListener;
@@ -132,7 +130,6 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, final Cursor cursor) {
-        Log.w("Sergio>", this + "Cursor= " + DatabaseUtils.dumpCursorToString(cursor));
 
         mCursor = cursor;
 
@@ -141,14 +138,12 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
             mCursor.moveToFirst();
             while (cursor.moveToNext()) {
                 if (cursor.getLong(ArticleLoader.Query._ID) == mStartId) {
-                    mPagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager());
-
-                    mPagerAdapter.swapCursor(cursor);
-                    mPagerAdapter.notifyDataSetChanged();
-
-                    mPager.setAdapter(mPagerAdapter);
-
                     int position = cursor.getPosition();
+
+                    fragmentPagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager());
+                    fragmentPagerAdapter.swapCursor(cursor);
+                    fragmentPagerAdapter.notifyDataSetChanged();
+                    mPager.setAdapter(fragmentPagerAdapter);
                     mPager.setCurrentItem(position, true);
 
                     break;
@@ -160,8 +155,8 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mPagerAdapter.swapCursor(null);
-        mPagerAdapter.notifyDataSetChanged();
+        fragmentPagerAdapter.swapCursor(null);
+        fragmentPagerAdapter.notifyDataSetChanged();
     }
 
     private void updateUpButtonPosition() {
