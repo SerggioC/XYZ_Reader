@@ -68,7 +68,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     private boolean loadmore = true;
     private List<String> bodyDataList;
     private int dataListSize;
-    private ProgressBar progressBar;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -127,8 +126,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                                 .setText("Some sample text")
                                 .getIntent(), getString(R.string.action_share)))
         );
-
-        progressBar = mRootView.findViewById(R.id.progressBar);
 
         RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
         bodyDataRecyclerView.setHasFixedSize(false);

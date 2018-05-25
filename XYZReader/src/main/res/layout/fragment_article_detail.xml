@@ -124,14 +124,5 @@
         app:fabSize="normal"
         app:pressedTranslationZ="@dimen/fab_elevation"/>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="visible"
-        app:layout_anchor="@id/toolbar"
-        app:layout_anchorGravity="bottom"
-        android:layout_gravity="bottom"/>
 
 </android.support.design.widget.CoordinatorLayout>
