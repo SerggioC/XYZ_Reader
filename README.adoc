@@ -1,4 +1,4 @@
-= XYZ Reader Starter Code
+= XYZ Reader APP
 
 This repository stores the XYZ Reader app made for Udacity's Android Nanodegree.
 
