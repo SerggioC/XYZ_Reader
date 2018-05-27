@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.VolleyError;
@@ -45,6 +44,7 @@ import java.util.List;
 public class ArticleDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String ARG_ITEM_ID = "item_id";
     private static final String TAG = "ArticleDetailFragment";
+
     private static final int CHUNK_SIZE = 10;
     private int FROM_INDEX = 0;
     private int TO_INDEX = CHUNK_SIZE;
@@ -97,10 +97,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     }
 
-    public ArticleDetailActivity getActivityCast() {
-        return (ArticleDetailActivity) getActivity();
-    }
-
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -128,62 +124,39 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         );
 
         RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
-        bodyDataRecyclerView.setHasFixedSize(false);
-        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mRootView.getContext(), LinearLayoutManager.VERTICAL, false);
-
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mRootView.getContext(), LinearLayoutManager.VERTICAL, false);
         bodyDataRecyclerView.setLayoutManager(linearLayoutManager);
+        bodyDataRecyclerView.setHasFixedSize(false);
 
         NestedScrollView nestedScrollView = mRootView.findViewById(R.id.nested_scrollview);
 
-        // Code to fetch more data incrementally and increase activity load time.
+        // Code to load more data incrementally and reduce activity start up time.
         nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (scrollView, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            if(scrollView.getChildAt(scrollView.getChildCount() - 1) != null) {
-                if ((scrollY >= (scrollView.getChildAt(scrollView.getChildCount() - 1).getMeasuredHeight() - scrollView.getMeasuredHeight())) &&
-                        scrollY > oldScrollY) {
+            if (scrollView.getChildAt(scrollView.getChildCount() - 1) != null) {
+                if ((scrollY >= (bodyDataRecyclerView.getMeasuredHeight() - scrollView.getMeasuredHeight())) && scrollY > oldScrollY) {
 
-                    int lastVisiblePosition = linearLayoutManager.findLastVisibleItemPosition();
-                    if (lastVisiblePosition >= bodyDataRecyclerView.getChildCount() - 1) {
-                        // Reached the bottom of RecyclerView
-                        if (loadmore) {
-                            TO_INDEX += CHUNK_SIZE;
-                            if (TO_INDEX >= dataListSize) {
-                                TO_INDEX = dataListSize - 1;
-                                loadmore = false;
-                            } else {
-                                loadmore = true;
-                            }
-                            List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
-                            bodyDataAdapter.swapBodyDataList(subBodyDataList);
-                        }
+                    TO_INDEX += CHUNK_SIZE;
+                    if (TO_INDEX >= dataListSize) {
+                        TO_INDEX = dataListSize - 1;
                     }
+                    redrawRecyclerViewSubList();
 
                 }
-
-                if (scrollY > oldScrollY) {
-                    Log.w(TAG, "Scroll UP");
-                }
-                if (scrollY < oldScrollY) {
-                    Log.w(TAG, "Scroll DOWN");
-                }
-
-                if (scrollY == 0) {
-                    Log.w(TAG, "TOP SCROLL");
-                }
-
-                if (scrollY == ( scrollView.getChildAt(0).getMeasuredHeight() - scrollView.getMeasuredHeight() )) {
-                    Log.w(TAG, "BOTTOM SCROLL");
-                }
-
-
 
             }
         });
+
         bodyDataAdapter = new BodyDataAdapter(mRootView.getContext());
         bodyDataRecyclerView.setAdapter(bodyDataAdapter);
 
         bindViews();
 
         return mRootView;
+    }
+
+    private void redrawRecyclerViewSubList() {
+        List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
+        bodyDataAdapter.swapBodyDataList(subBodyDataList);
     }
 
     private Date parsePublishedDate() {
@@ -273,8 +246,8 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             String bodyData = mCursor.getString(ArticleLoader.Query.BODY);
             bodyDataList = Arrays.asList(bodyData.split("(\r\n\r\n)"));
             dataListSize = bodyDataList.size();
-            List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
-            bodyDataAdapter.swapBodyDataList(subBodyDataList);
+
+            redrawRecyclerViewSubList();
 
 
             ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
