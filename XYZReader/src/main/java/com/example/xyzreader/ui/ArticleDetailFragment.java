@@ -47,7 +47,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     private static final int CHUNK_SIZE = 10;
     private int FROM_INDEX = 0;
-    private int TO_INDEX = CHUNK_SIZE;
+    private int TO_INDEX = 20;
 
     private Cursor mCursor;
     private long mItemId;
@@ -132,18 +132,17 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         // Code to load more data incrementally and reduce activity start up time.
         nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (scrollView, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            if (scrollView.getChildAt(scrollView.getChildCount() - 1) != null) {
-                if ((scrollY >= (bodyDataRecyclerView.getMeasuredHeight() - scrollView.getMeasuredHeight())) && scrollY > oldScrollY) {
 
-                    TO_INDEX += CHUNK_SIZE;
-                    if (TO_INDEX >= dataListSize) {
-                        TO_INDEX = dataListSize - 1;
-                    }
-                    redrawRecyclerViewSubList();
+            if ((scrollY >= (bodyDataRecyclerView.getMeasuredHeight() - scrollView.getMeasuredHeight())) && scrollY > oldScrollY) {
 
+                TO_INDEX += CHUNK_SIZE;
+                if (TO_INDEX >= dataListSize) {
+                    TO_INDEX = dataListSize - 1;
                 }
+                redrawRecyclerViewSubList();
 
             }
+
         });
 
         bodyDataAdapter = new BodyDataAdapter(mRootView.getContext());
