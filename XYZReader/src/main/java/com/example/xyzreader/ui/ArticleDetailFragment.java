@@ -3,15 +3,12 @@ package com.example.xyzreader.ui;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.Loader;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,9 +17,7 @@ import android.text.Html;
 import android.text.Spanned;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +28,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
 import com.example.xyzreader.adapter.BodyDataAdapter;
-import com.example.xyzreader.adapter.FragmentPagerAdapter;
 import com.example.xyzreader.data.ArticleLoader;
 
 import java.text.ParseException;
@@ -48,13 +42,10 @@ import java.util.List;
  */
 public class ArticleDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String ARG_ITEM_ID = "item_id"; // On creating ViewPager fragments
-    public static final String ARTICLE_ITEM_ID = "article_item_ID"; // On selecting article
-    public static final String EXTRA_CURRENT_ID = "current_id_extra"; // To bundle
 
     // Big text data RecyclerView variables
     private static final int CHUNK_SIZE = 10;
-    private static final int SINGLE_ARTICLE_LOADER_ID = 0;
-    private static final int ALL_ARTICLES_LOADER_ID = 1;
+    private static final int SINGLE_ARTICLE_LOADER_ID = 1;
     private int FROM_INDEX = 0;
     private int TO_INDEX = 20;
 
@@ -66,7 +57,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     private View mPhotoContainerView;
     private ImageView mPhotoView;
     private int mScrollY;
-    private boolean mIsCard = false;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     private SimpleDateFormat outputFormat = new SimpleDateFormat();     // Use default locale format
@@ -77,17 +67,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
 
     private long mSelectedItemId;
-    private int mTopInset;
-
-
-    private ViewPager viewPager;
-    private FragmentPagerAdapter fragmentPagerAdapter;
-    private View mUpButtonContainer;
     private View mUpButton;
-    private ViewPager.OnPageChangeListener onPageChangeListener;
-
-    private long mStartId;
-
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -105,116 +85,30 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
-            mItemId = getArguments().getLong(ARG_ITEM_ID);
+        Bundle arguments = getArguments();
+        if (arguments.containsKey(ARG_ITEM_ID)) {
+            mItemId = arguments.getLong(ARG_ITEM_ID);
         }
 
-        mStartId = getArguments().containsKey(ARTICLE_ITEM_ID) ? getArguments().getLong(ARTICLE_ITEM_ID) : 0;
+        //mStartId = arguments.containsKey(ARTICLE_ITEM_ID) ? arguments.getLong(ARTICLE_ITEM_ID) : 0;
 
-        mIsCard = getResources().getBoolean(R.bool.detail_is_card);
         setHasOptionsMenu(true);
 
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        // In support library r8, calling initLoader for a fragment in a FragmentPagerAdapter in
-        // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
-        // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
-        // we do this in onActivityCreated.
-        //getLoaderManager().initLoader(SINGLE_ARTICLE_LOADER_ID, null, this);
-        getLoaderManager().initLoader(ALL_ARTICLES_LOADER_ID, null, this);
-
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mRootView = inflater.inflate(R.layout.fragment_viewpager, container, false);
+        mRootView = inflater.inflate(R.layout.fragment_article_detail_page, container, false);
 
         mPhotoView = mRootView.findViewById(R.id.photo);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
-        mRootView.findViewById(R.id.share_fab).setOnClickListener(view ->
-                startActivity(Intent
-                        .createChooser(ShareCompat.IntentBuilder.from(getActivity())
-                                .setType("text/plain")
-                                .setText("Some sample text")
-                                .getIntent(), getString(R.string.action_share)))
-        );
-
-
-
-
-
-        viewPager = mRootView.findViewById(R.id.pager);
-
-        viewPager.setPageTransformer(true, new ZoomOutPageTransformer());
-
-        onPageChangeListener = new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                if (mCursor != null) {
-                    mCursor.moveToPosition(position);
-                    mSelectedItemId = mCursor.getLong(ArticleLoader.Query._ID);
-                    viewPager.setCurrentItem(position, true);
-                    updateUpButtonPosition();
-                }
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                mUpButton.animate()
-                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
-                        .setDuration(300);
-            }
-        };
-
-        viewPager.addOnPageChangeListener(onPageChangeListener);
-
-
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        int marginPixels = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, displayMetrics);
-        viewPager.setPageMargin(marginPixels);
-
-        viewPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
-
-
-        mUpButton = mRootView.findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(view -> {
-            getFragmentManager().popBackStack();
-        });
-
-        mUpButtonContainer = mRootView.findViewById(R.id.up_container);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mUpButtonContainer.setOnApplyWindowInsetsListener((view, windowInsets) -> {
-                view.onApplyWindowInsets(windowInsets);
-                mTopInset = windowInsets.getSystemWindowInsetTop();
-                mUpButtonContainer.setTranslationY(mTopInset);
-                updateUpButtonPosition();
-                return windowInsets;
-            });
-        }
+        mRootView.findViewById(R.id.share_fab);
+        mRootView.setOnClickListener(view -> shareArticle());
 
         if (savedInstanceState == null) {
-  //          if (getIntent() != null && getIntent().getData() != null) {
-  //              mStartId = ItemsContract.Items.getItemId(getIntent().getData());
-                mSelectedItemId = mStartId;
- //           }
+            mSelectedItemId = mItemId;
         } else {
-            mSelectedItemId = savedInstanceState.getLong(EXTRA_CURRENT_ID);
+            mSelectedItemId = MainActivity.currentItemId;
         }
-
-
-
-
-
-
-
 
 
         RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
@@ -238,14 +132,10 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         bindViews();
 
+        container.addView(mRootView);
         return mRootView;
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putLong(EXTRA_CURRENT_ID, mSelectedItemId);
-    }
 
     private void redrawRecyclerViewSubList() {
         List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
@@ -267,8 +157,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         switch (loaderId) {
             case SINGLE_ARTICLE_LOADER_ID:
                 return ArticleLoader.newInstanceForItemId(getActivity(), mItemId);
-            case ALL_ARTICLES_LOADER_ID:
-                return ArticleLoader.newAllArticlesInstance(getActivity());
             default:
                 Log.e("Sergio>", " onCreateLoader:\n= " + "Wrong Loader ID Provided: " + loaderId);
                 return null;
@@ -296,55 +184,12 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             bindViews();
         }
 
-
-        if (loader.getId() == ALL_ARTICLES_LOADER_ID) {
-            mCursor = cursor;
-
-
-            // Select the start ID
-            mCursor.moveToFirst();
-            int position = 0;
-            while (cursor.moveToNext()) {
-                if (cursor.getLong(ArticleLoader.Query._ID) == mStartId) {
-                    position = cursor.getPosition();
-                    bindViews();
-                }
-            }
-
-            fragmentPagerAdapter = new FragmentPagerAdapter(this);
-            fragmentPagerAdapter.swapCursor(cursor);
-            viewPager.setAdapter(fragmentPagerAdapter);
-            viewPager.setCurrentItem(position, true);
-
-        }
-
-
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mCursor = null;
-        fragmentPagerAdapter.swapCursor(null);
-
         bindViews();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        viewPager.removeOnPageChangeListener(onPageChangeListener);
-
-    }
-
-    public int getUpButtonFloor() {
-        if (mPhotoContainerView == null || mPhotoView.getHeight() == 0) {
-            return Integer.MAX_VALUE;
-        }
-
-        // account for parallax
-        return mIsCard
-                ? (int) mPhotoContainerView.getTranslationY() + mPhotoView.getHeight() - mScrollY
-                : mPhotoView.getHeight() - mScrollY;
     }
 
 
@@ -452,8 +297,12 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     }
 
 
-    private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
-        mUpButton.setTranslationY(Math.min(Integer.MAX_VALUE - upButtonNormalBottom, 0));
+    private void shareArticle() {
+        startActivity(Intent
+                .createChooser(ShareCompat.IntentBuilder.from(getActivity())
+                        .setType("text/plain")
+                        .setText("Some sample text")
+                        .getIntent(), getString(R.string.action_share)));
     }
+
 }

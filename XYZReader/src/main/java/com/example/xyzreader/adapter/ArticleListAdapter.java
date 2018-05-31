@@ -4,7 +4,6 @@ package com.example.xyzreader.adapter;
 import android.animation.Animator;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.transition.TransitionSet;
@@ -29,7 +28,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
-import com.example.xyzreader.ui.ArticleDetailFragment;
+import com.example.xyzreader.ui.ArticlePagerFragment;
 import com.example.xyzreader.ui.DynamicHeightNetworkImageView;
 import com.example.xyzreader.ui.MainActivity;
 
@@ -38,8 +37,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.example.xyzreader.ui.ArticleDetailFragment.ARTICLE_ITEM_ID;
 
 public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.ViewHolder> {
     private final RequestManager glideManager;
@@ -88,11 +85,8 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
             // Update the position.
             MainActivity.currentPosition = adapterPosition;
 
-            long itemId = getItemId(adapterPosition);
-            // Replaced with fragment
-            // Uri uri = ItemsContract.Items.buildItemUri(itemId);
-            // parent.getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
-            //// <--
+            // Update the corresponding Item ID
+            MainActivity.currentItemId = getItemId(adapterPosition);
 
             // Create circular reveal animation on item click
             int finalRadius = (int) Math.hypot(view.getWidth() / 2, view.getHeight() / 2);
@@ -100,23 +94,23 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
             circularReveal.setDuration(100);
             circularReveal.start();
 
-
             // Exclude the clicked card from the exit transition (e.g. the card will disappear immediately
             // instead of fading out with the rest to prevent an overlapping animation of fade and move).
             ((TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
 
             DynamicHeightNetworkImageView transitioningView = view.findViewById(R.id.thumbnail);
 
-            ArticleDetailFragment articleDetailFragment = new ArticleDetailFragment();
-            Bundle bundle = new Bundle();
-            bundle.putLong(ARTICLE_ITEM_ID, itemId);
-            articleDetailFragment.setArguments(bundle);
+//            ArticleDetailFragment articleDetailFragment = new ArticleDetailFragment();
+//            Bundle bundle = new Bundle();
+//            bundle.putLong(ARTICLE_ITEM_ID, itemId);
+//            articleDetailFragment.setArguments(bundle);
 
-            this.fragment.getFragmentManager()
+
+            fragment.getFragmentManager()
                     .beginTransaction()
                     .setReorderingAllowed(true) // Optimize for shared element transition
                     .addSharedElement(transitioningView, transitioningView.getTransitionName())
-                    .replace(R.id.fragment_container, articleDetailFragment, ArticleDetailFragment.class.getSimpleName())
+                    .replace(R.id.fragment_container, new ArticlePagerFragment(), ArticlePagerFragment.class.getSimpleName())
                     .addToBackStack(null)
                     .commit();
         }

@@ -23,9 +23,10 @@
             android:id="@+id/thumbnail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
             android:contentDescription="@string/article_image"
             android:scaleType="centerCrop"
-            android:adjustViewBounds="true"/>
+            tools:src="@mipmap/ic_launcher"/>
 
         <TextView
             android:id="@+id/article_title"

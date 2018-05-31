@@ -122,8 +122,8 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
     }
 
     /**
-     * Prepares the shared element transition to the pager fragment, as well as the other transitions
-     * that affect the flow.
+     * Prepares the shared element transition to the pager fragment,
+     * as well as the other transitions that affect the flow.
      */
     private void prepareTransitions() {
         Transition transition = TransitionInflater.from(getContext()).inflateTransition(R.transition.grid_exit_transition);

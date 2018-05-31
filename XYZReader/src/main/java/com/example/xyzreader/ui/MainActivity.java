@@ -13,7 +13,9 @@ public class MainActivity extends AppCompatActivity {
      * position updated when a grid item is clicked, or when paging the pager.
      */
     public static int currentPosition;
+    public static long currentItemId;
     private static final String KEY_CURRENT_POSITION = "com.example.xyzreader.key.currentPosition";
+    private static final String KEY_CURRENT_ITEM_ID = "com.example.xyzreader.key.currentItemId";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         if (savedInstanceState != null) {
             currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION, 0);
+            currentItemId  = savedInstanceState.getLong(KEY_CURRENT_ITEM_ID, 0);
             // Return here to prevent adding additional Fragments when changing orientation.
             return;
         }
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_CURRENT_POSITION, currentPosition);
+        outState.putLong(KEY_CURRENT_ITEM_ID, currentItemId);
     }
 
 

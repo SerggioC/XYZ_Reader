@@ -18,13 +18,12 @@ import com.example.xyzreader.adapter.FragmentPagerAdapter;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 
-import static com.example.xyzreader.ui.ArticleDetailFragment.EXTRA_CURRENT_ID;
-
 /**
  * An activity representing a single Article detail screen, letting you swipe between articles.
  */
 public class ArticleDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String EXTRA_CURRENT_ID = "extra_current_id_delete_ignore";
     private Cursor mCursor;
     private long mStartId;
 
