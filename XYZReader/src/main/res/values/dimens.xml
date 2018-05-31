@@ -12,5 +12,6 @@
     <dimen name="fab_size">56dp</dimen>
     <dimen name="upButtonSize">56dp</dimen>
     <dimen name="body_text_margin">8dp</dimen>
+    <dimen name="appbar_elevation">4dp</dimen>
 
 </resources>

@@ -2,6 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/grid_card_view_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
@@ -22,8 +23,9 @@
             android:id="@+id/thumbnail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/article_image"
             android:scaleType="centerCrop"
-            android:background="@color/grey_500"/>
+            android:adjustViewBounds="true"/>
 
         <TextView
             android:id="@+id/article_title"
