@@ -60,8 +60,8 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
         }
 
         // Get back to the Article list
-        mUpButton = mRootView.findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(view -> getFragmentManager().popBackStack());
+//        mUpButton = mRootView.findViewById(R.id.action_up);
+//        mUpButton.setOnClickListener(view -> getChildFragmentManager().popBackStack());
 
         return mRootView;
     }
@@ -141,7 +141,7 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
                         "positionOffSet= " + positionOffset + "\n" +
                         "positionOffsetPixels= " + positionOffsetPixels);
 
-                mUpButton.setAlpha(positionOffset);
+                //mUpButton.setAlpha(positionOffset);
                 //mUpButton.setTranslationX(positionOffsetPixels);
             }
         };

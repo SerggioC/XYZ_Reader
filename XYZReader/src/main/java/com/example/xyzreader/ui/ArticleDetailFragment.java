@@ -130,9 +130,8 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         bodyDataAdapter = new BodyDataAdapter(mRootView.getContext());
         bodyDataRecyclerView.setAdapter(bodyDataAdapter);
 
-        bindViews();
+        //bindViews();
 
-        container.addView(mRootView);
         return mRootView;
     }
 
@@ -166,7 +165,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-
 
         if (loader.getId() == SINGLE_ARTICLE_LOADER_ID) {
             if (!isAdded()) {
@@ -243,7 +241,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         redrawRecyclerViewSubList();
 
         String imageUrl = mCursor.getString(ArticleLoader.Query.PHOTO_URL);
-
 
 
         ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
