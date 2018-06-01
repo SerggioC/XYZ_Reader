@@ -61,6 +61,8 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
     @Override
     public void onReady(boolean isRefreshing) {
         updateRefreshingUI(isRefreshing);
+        prepareTransitions();
+        postponeEnterTransition();
     }
 
     public void updateRefreshingUI(boolean isRefreshing) {
@@ -88,9 +90,6 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
         if (savedInstanceState == null) {
             refresh();
         }
-
-        prepareTransitions();
-        postponeEnterTransition();
 
         return rootView;
     }
@@ -146,8 +145,7 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
                         }
 
                         // Map the first shared element name to the child ImageView.
-                        sharedElements
-                                .put(names.get(0), selectedViewHolder.itemView.findViewById(R.id.grid_card_view_item));
+                        sharedElements.put(names.get(0), selectedViewHolder.itemView.findViewById(R.id.thumbnail));
                     }
                 });
     }
@@ -171,6 +169,8 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
         StaggeredGridLayoutManager layoutManager =
                 new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
+        onReady(false);
+
     }
 
     @Override

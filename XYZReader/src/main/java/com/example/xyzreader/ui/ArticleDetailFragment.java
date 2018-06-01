@@ -131,10 +131,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             }
         });
 
-        bodyDataAdapter = new BodyDataAdapter(rootView.getContext());
-        bodyDataRecyclerView.setAdapter(bodyDataAdapter);
-
         getLoaderManager().initLoader(SINGLE_ARTICLE_LOADER_ID, null, this);
+
+
 
         return rootView;
     }
@@ -151,6 +150,10 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         bodyDataRecyclerView = rootView.findViewById(R.id.article_body_recyclerView);
         nestedScrollView = rootView.findViewById(R.id.nested_scrollview);
         actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+
+        bodyDataRecyclerView.setAdapter(bodyDataAdapter);
+        bodyDataAdapter = new BodyDataAdapter(rootView.getContext());
+
     }
 
     private void setUpToolbar() {
@@ -269,6 +272,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         String imageUrl = mCursor.getString(ArticleLoader.Query.PHOTO_URL);
 
+        // Just like we do when binding views at the grid, we set the transition name
+        // to be the image URL
+        mPhotoView.setTransitionName(imageUrl);
 
         ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
                 .get(imageUrl, new ImageLoader.ImageListener() {
@@ -284,15 +290,22 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                             mPhotoView.setImageBitmap(imageContainer.getBitmap());
                             mToolbar.setBackgroundColor(mMutedColor);
                         }
+                        // The postponeEnterTransition is called on the parent ImagePagerFragment, so the
+                        // startPostponedEnterTransition() should also be called on it to get the transition
+                        // going when the image is ready.
+                        getParentFragment().startPostponedEnterTransition();
                     }
 
                     @Override
                     public void onErrorResponse(VolleyError volleyError) {
-
+                        // The postponeEnterTransition is called on the parent ImagePagerFragment, so the
+                        // startPostponedEnterTransition() should also be called on it to get the transition
+                        // going in case of a failure.
+                        getParentFragment().startPostponedEnterTransition();
                     }
                 });
 
-
+        postponeEnterTransition();
 //
 //        Glide.with(this).asBitmap().load(imageUrl)
 //                .listener(new RequestListener<Bitmap>() {

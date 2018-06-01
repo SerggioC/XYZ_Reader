@@ -2,14 +2,14 @@ package com.example.xyzreader.adapter;
 
 import android.database.Cursor;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.view.ViewGroup;
 
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.ui.ArticleDetailFragment;
 
 import java.lang.ref.WeakReference;
 
-public class FragmentPagerAdapter extends FragmentStatePagerAdapter {
+public class FragmentPagerAdapter extends android.support.v4.app.FragmentPagerAdapter {
     private WeakReference<Cursor> weakCursor;
 
     public FragmentPagerAdapter(Fragment fragment) {
@@ -29,7 +29,12 @@ public class FragmentPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     @Override
+    public Object instantiateItem(ViewGroup container, int position) {
+        return super.instantiateItem(container, position);
+    }
+
+    @Override
     public int getCount() {
-        return (weakCursor.get() != null) ? weakCursor.get().getCount() : 0;
+        return (weakCursor != null) ? weakCursor.get().getCount() : 0;
     }
 }

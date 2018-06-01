@@ -1,7 +1,11 @@
 package com.example.xyzreader.ui;
 
+import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -50,7 +54,7 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
         View mRootView = inflater.inflate(R.layout.fragment_viewpager, container, false);
 
         setupViewPager(mRootView);
-        //prepareSharedElementTransition();
+        prepareSharedElementTransition();
 
         // Avoid a postponeEnterTransition on orientation change, and postpone only of first creation.
         if (savedInstanceState == null) {
@@ -137,7 +141,6 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
                 }
             }
             updateViewPager(cursor, position);
-            prepareSharedElementTransition();
         }
     }
 
@@ -165,13 +168,42 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
      * Prepares the shared element transition from and back to the grid fragment.
      */
     private void prepareSharedElementTransition() {
-        Transition transition =
-                TransitionInflater.from(getContext())
-                        .inflateTransition(R.transition.image_shared_element_transition);
+        Transition transition = TransitionInflater.from(getContext())
+                .inflateTransition(R.transition.image_shared_element_transition);
         setSharedElementEnterTransition(transition);
 
         // A similar mapping is set at the ArticleListFragment with a setExitSharedElementCallback.
         setEnterSharedElementCallback(new SharedElementCallback() {
+            @Override
+            public void onSharedElementEnd(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
+                super.onSharedElementEnd(sharedElementNames, sharedElements, sharedElementSnapshots);
+            }
+
+            @Override
+            public void onRejectSharedElements(List<View> rejectedSharedElements) {
+                super.onRejectSharedElements(rejectedSharedElements);
+            }
+
+            @Override
+            public Parcelable onCaptureSharedElementSnapshot(View sharedElement, Matrix viewToGlobalMatrix, RectF screenBounds) {
+                return super.onCaptureSharedElementSnapshot(sharedElement, viewToGlobalMatrix, screenBounds);
+            }
+
+            @Override
+            public View onCreateSnapshotView(Context context, Parcelable snapshot) {
+                return super.onCreateSnapshotView(context, snapshot);
+            }
+
+            @Override
+            public void onSharedElementsArrived(List<String> sharedElementNames, List<View> sharedElements, OnSharedElementsReadyListener listener) {
+                super.onSharedElementsArrived(sharedElementNames, sharedElements, listener);
+            }
+
+            @Override
+            public void onSharedElementStart(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
+                super.onSharedElementStart(sharedElementNames, sharedElements, sharedElementSnapshots);
+            }
+
             @Override
             public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
                 // Locate the image view at the primary fragment (the ImageFragment that is currently
