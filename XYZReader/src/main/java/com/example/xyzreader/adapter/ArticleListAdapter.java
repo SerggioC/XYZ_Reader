@@ -28,6 +28,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
+import com.example.xyzreader.ui.ArticleListFragment;
 import com.example.xyzreader.ui.ArticlePagerFragment;
 import com.example.xyzreader.ui.DynamicHeightNetworkImageView;
 import com.example.xyzreader.ui.MainActivity;
@@ -104,6 +105,13 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
 //            Bundle bundle = new Bundle();
 //            bundle.putLong(ARTICLE_ITEM_ID, itemId);
 //            articleDetailFragment.setArguments(bundle);
+
+            Fragment fragmentByTag = fragment.getFragmentManager().findFragmentByTag(ArticleListFragment.class.getSimpleName());
+//            fragment.getFragmentManager().beginTransaction()
+//                    .remove(fragmentByTag)
+//                    .hide(fragmentByTag)
+//                    .detach(fragmentByTag)
+//                    .commitNow();
 
 
             fragment.getFragmentManager()

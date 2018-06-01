@@ -3,16 +3,21 @@ package com.example.xyzreader.ui;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.format.DateUtils;
@@ -51,7 +56,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     private Cursor mCursor;
     private long mItemId;
-    private View mRootView;
     private int mMutedColor = 0xFF333333;
 
     private View mPhotoContainerView;
@@ -68,6 +72,14 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     private long mSelectedItemId;
     private View mUpButton;
+    private TextView titleView;
+    private TextView bylineView;
+    private Toolbar mToolbar;
+    private RecyclerView bodyDataRecyclerView;
+    private NestedScrollView nestedScrollView;
+    private FloatingActionButton shareFAB;
+    private ActionBar actionBar;
+    private Drawable backIcon;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -86,6 +98,8 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_article_detail_page, container, false);
+        bindTheViews(rootView);
 
         Bundle arguments = getArguments();
         if (arguments.containsKey(ARG_ITEM_ID)) {
@@ -94,15 +108,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         //mStartId = arguments.containsKey(ARTICLE_ITEM_ID) ? arguments.getLong(ARTICLE_ITEM_ID) : 0;
 
-        setHasOptionsMenu(true);
 
-        mRootView = inflater.inflate(R.layout.fragment_article_detail_page, container, false);
-
-        mPhotoView = mRootView.findViewById(R.id.photo);
-        mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
-
-        mRootView.findViewById(R.id.share_fab);
-        mRootView.setOnClickListener(view -> shareArticle());
+        bylineView.setMovementMethod(new LinkMovementMethod());
+        shareFAB.setOnClickListener(view -> shareArticle());
 
         if (savedInstanceState == null) {
             mSelectedItemId = mItemId;
@@ -110,13 +118,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             mSelectedItemId = MainActivity.currentItemId;
         }
 
-
-        RecyclerView bodyDataRecyclerView = mRootView.findViewById(R.id.article_body_recyclerView);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mRootView.getContext(), LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(rootView.getContext(), LinearLayoutManager.VERTICAL, false);
         bodyDataRecyclerView.setLayoutManager(linearLayoutManager);
         bodyDataRecyclerView.setHasFixedSize(false);
-
-        NestedScrollView nestedScrollView = mRootView.findViewById(R.id.nested_scrollview);
 
         // Code to load more data incrementally and reduce start up time.
         nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (scrollView, scrollX, scrollY, oldScrollX, oldScrollY) -> {
@@ -127,14 +131,41 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             }
         });
 
-        bodyDataAdapter = new BodyDataAdapter(mRootView.getContext());
+        bodyDataAdapter = new BodyDataAdapter(rootView.getContext());
         bodyDataRecyclerView.setAdapter(bodyDataAdapter);
 
-        //bindViews();
+        getLoaderManager().initLoader(SINGLE_ARTICLE_LOADER_ID, null, this);
 
-        return mRootView;
+        return rootView;
     }
 
+    private void bindTheViews(View rootView) {
+        mToolbar = rootView.findViewById(R.id.toolbar);
+        setUpToolbar();
+        backIcon = mToolbar.getNavigationIcon();
+        titleView = rootView.findViewById(R.id.article_title);
+        bylineView = rootView.findViewById(R.id.article_byline);
+        mPhotoView = rootView.findViewById(R.id.photo);
+        mPhotoContainerView = rootView.findViewById(R.id.photo_container);
+        shareFAB = rootView.findViewById(R.id.share_fab);
+        bodyDataRecyclerView = rootView.findViewById(R.id.article_body_recyclerView);
+        nestedScrollView = rootView.findViewById(R.id.nested_scrollview);
+        actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+    }
+
+    private void setUpToolbar() {
+        setHasOptionsMenu(true);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
+
+        // Show the Up button in the action bar.
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+        }
+        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
+
+    }
 
     private void redrawRecyclerViewSubList() {
         List<String> subBodyDataList = bodyDataList.subList(FROM_INDEX, TO_INDEX);
@@ -179,7 +210,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                 mCursor = null;
             }
 
-            bindViews();
+            updateViews();
         }
 
     }
@@ -187,28 +218,24 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mCursor = null;
-        bindViews();
+        updateViews();
     }
 
 
-    private void bindViews() {
-        if (mRootView == null) return;
-
-        TextView titleView = mRootView.findViewById(R.id.article_title);
-        TextView bylineView = mRootView.findViewById(R.id.article_byline);
-        bylineView.setMovementMethod(new LinkMovementMethod());
+    private void updateViews() {
+        //if (mRootView == null) return;
 
         if (mCursor == null) {
-            mRootView.setVisibility(View.GONE);
+            //mRootView.setVisibility(View.GONE);
             titleView.setText("N/A");
             bylineView.setText("N/A");
             bodyDataAdapter.swapBodyDataList(null);
             return;
         }
 
-        mRootView.setAlpha(0);
-        mRootView.setVisibility(View.VISIBLE);
-        mRootView.animate().alpha(1);
+        backIcon.setAlpha(0);
+        backIcon.setVisible(true, true);
+        backIcon.setAlpha(1);
         String title = mCursor.getString(ArticleLoader.Query.TITLE);
         titleView.setText(title);
 
@@ -255,7 +282,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                                     .generate();
                             mMutedColor = palette.getDarkMutedColor(0xFF333333);
                             mPhotoView.setImageBitmap(imageContainer.getBitmap());
-                            mRootView.findViewById(R.id.toolbar).setBackgroundColor(mMutedColor);
+                            mToolbar.setBackgroundColor(mMutedColor);
                         }
                     }
 

@@ -76,6 +76,8 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
         mToolbar = rootView.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
 
+        setHasOptionsMenu(true);
+
         mSwipeRefreshLayout = rootView.findViewById(R.id.swipe_refresh_layout);
         mSwipeRefreshLayout.setRefreshing(true);
 

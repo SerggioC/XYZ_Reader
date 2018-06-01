@@ -22,7 +22,7 @@ import com.example.xyzreader.data.ArticleLoader;
 import java.util.List;
 import java.util.Map;
 
-public class ArticlePagerFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+public class ArticlePagerFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final int ALL_ARTICLES_LOADER_ID = 0;
 
     private ViewPager viewPager;
@@ -41,16 +41,15 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
         // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
         // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
         // we do this in onActivityCreated.
-        getLoaderManager().initLoader(ALL_ARTICLES_LOADER_ID, null, this);
+        //getLoaderManager().initLoader(ALL_ARTICLES_LOADER_ID, null, this);
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View mRootView = inflater.inflate(R.layout.fragment_viewpager, container, false);
-        viewPager = mRootView.findViewById(R.id.pager);
 
-        //setUpViewPager();
+        setupViewPager(mRootView);
         //prepareSharedElementTransition();
 
         // Avoid a postponeEnterTransition on orientation change, and postpone only of first creation.
@@ -63,53 +62,14 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
 //        mUpButton = mRootView.findViewById(R.id.action_up);
 //        mUpButton.setOnClickListener(view -> getChildFragmentManager().popBackStack());
 
+        getLoaderManager().initLoader(ALL_ARTICLES_LOADER_ID, null, this);
+
         return mRootView;
     }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int loaderId, Bundle bundle) {
-        switch (loaderId) {
-            case ALL_ARTICLES_LOADER_ID:
-                return ArticleLoader.newAllArticlesInstance(getActivity());
-            default:
-                Log.e("Sergio>", " onCreateLoader:\n= " + "Wrong Loader ID Provided: " + loaderId);
-                return null;
-        }
-    }
-
-    @Override
-    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-        if (loader.getId() == ALL_ARTICLES_LOADER_ID) {
-            mCursor = cursor;
-
-            // Select the start ID
-            mCursor.moveToFirst();
-            int position = 0;
-            while (cursor.moveToNext()) {
-                long itemId = cursor.getLong(ArticleLoader.Query._ID);
-                if (itemId == mStartId) {
-                    position = cursor.getPosition();
-                    MainActivity.currentPosition = position;
-                    MainActivity.currentItemId = itemId;
-                }
-            }
-            setUpViewPager(cursor, position);
-            prepareSharedElementTransition();
-        }
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mCursor = null;
-        fragmentPagerAdapter.swapCursor(null);
-    }
-
-
-    private void setUpViewPager(Cursor cursor, int position) {
+    private void setupViewPager(View mRootView) {
+        viewPager = mRootView.findViewById(R.id.pager);
         fragmentPagerAdapter = new FragmentPagerAdapter(this);
-        fragmentPagerAdapter.swapCursor(cursor);
-        viewPager.setAdapter(fragmentPagerAdapter);
-        viewPager.setCurrentItem(position);
 
         // Transformation animation on page switch
         viewPager.setPageTransformer(true, new ZoomOutPageTransformer());
@@ -147,9 +107,52 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
         };
 
         viewPager.addOnPageChangeListener(onPageChangeListener);
-
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int loaderId, Bundle bundle) {
+        switch (loaderId) {
+            case ALL_ARTICLES_LOADER_ID:
+                return ArticleLoader.newAllArticlesInstance(getActivity());
+            default:
+                Log.e("Sergio>", " onCreateLoader:\n= " + "Wrong Loader ID Provided: " + loaderId);
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        if (loader.getId() == ALL_ARTICLES_LOADER_ID) {
+            mCursor = cursor;
+
+            // Select the start ID
+            mCursor.moveToFirst();
+            int position = 0;
+            while (cursor.moveToNext()) {
+                long itemId = cursor.getLong(ArticleLoader.Query._ID);
+                if (itemId == mStartId) {
+                    position = cursor.getPosition();
+                    MainActivity.currentPosition = position;
+                    MainActivity.currentItemId = itemId;
+                }
+            }
+            updateViewPager(cursor, position);
+            prepareSharedElementTransition();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        mCursor = null;
+        fragmentPagerAdapter.swapCursor(null);
+    }
+
+
+    private void updateViewPager(Cursor cursor, int position) {
+        fragmentPagerAdapter.swapCursor(cursor);
+        viewPager.setAdapter(fragmentPagerAdapter);
+        viewPager.setCurrentItem(position);
+    }
 
 
     @Override
