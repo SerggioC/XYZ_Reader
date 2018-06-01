@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.transition.TransitionSet;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
@@ -47,11 +46,15 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
     private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
     private Cursor mCursor;
 
-    public ArticleListAdapter(Fragment fragment, Cursor cursor) {
+    public ArticleListAdapter(Fragment fragment) {
         this.glideManager = Glide.with(fragment);
-        this.mCursor = cursor;
         this.viewHolderListener = new ViewHolderListenerImpl(fragment);
     }
+
+    public void swapCursor(Cursor cursor) {
+        this.mCursor = cursor;
+    }
+
 
     /**
      * A listener that is attached to all ViewHolders
@@ -96,7 +99,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
 
             // Exclude the clicked card from the exit transition (e.g. the card will disappear immediately
             // instead of fading out with the rest to prevent an overlapping animation of fade and move).
-            ((TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
+            ((android.transition.TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
 
             DynamicHeightNetworkImageView transitioningView = view.findViewById(R.id.thumbnail);
 
@@ -186,7 +189,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
 
     @Override
     public int getItemCount() {
-        return mCursor.getCount();
+        return mCursor != null ? mCursor.getCount() : 0;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

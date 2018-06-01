@@ -7,8 +7,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.transition.Transition;
-import android.support.transition.TransitionInflater;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.SharedElementCallback;
 import android.support.v4.content.Loader;
@@ -17,6 +15,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
+import android.transition.Transition;
+import android.transition.TransitionInflater;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -45,6 +45,7 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
     private RecyclerView mRecyclerView;
 
     private DataBroadcastReceiver mRefreshingReceiver = new DataBroadcastReceiver(this);
+    private ArticleListAdapter articleListAdapter;
 
     @Override
     public void onAttach(Context context) {
@@ -61,8 +62,6 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
     @Override
     public void onReady(boolean isRefreshing) {
         updateRefreshingUI(isRefreshing);
-        prepareTransitions();
-        postponeEnterTransition();
     }
 
     public void updateRefreshingUI(boolean isRefreshing) {
@@ -84,6 +83,16 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
         mSwipeRefreshLayout.setRefreshing(true);
 
         mRecyclerView = rootView.findViewById(R.id.recycler_view);
+
+        articleListAdapter = new ArticleListAdapter(this);
+        articleListAdapter.setHasStableIds(true);
+        mRecyclerView.setAdapter(articleListAdapter);
+        int columnCount = getResources().getInteger(R.integer.list_column_count);
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        prepareTransitions();
+        postponeEnterTransition();
 
         getLoaderManager().initLoader(0, null, this);
 
@@ -128,27 +137,29 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
      */
     private void prepareTransitions() {
         Transition transition = TransitionInflater.from(getContext()).inflateTransition(R.transition.grid_exit_transition);
-        transition.setDuration(775);
-        transition.setStartDelay(25);
         setExitTransition(transition);
 
-        // A similar mapping is set at the ImagePagerFragment with a setEnterSharedElementCallback.
-        setExitSharedElementCallback(
-                new SharedElementCallback() {
-                    @Override
-                    public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-                        // Locate the ViewHolder for the clicked position.
-                        RecyclerView.ViewHolder selectedViewHolder = mRecyclerView
-                                .findViewHolderForAdapterPosition(MainActivity.currentPosition);
-                        if (selectedViewHolder == null || selectedViewHolder.itemView == null) {
-                            return;
-                        }
+        // A similar mapping is set at the ArticlePagerFragment with a setEnterSharedElementCallback.
+        SharedElementCallback exitSharedElementCallback = new SharedElementCallback() {
+            @Override
+            public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
+                super.onMapSharedElements(names, sharedElements);
+                // Locate the ViewHolder for the clicked position.
+                RecyclerView.ViewHolder selectedViewHolder = mRecyclerView
+                        .findViewHolderForAdapterPosition(MainActivity.currentPosition);
+                if (selectedViewHolder == null || selectedViewHolder.itemView == null) {
+                    return;
+                }
 
-                        // Map the first shared element name to the child ImageView.
-                        sharedElements.put(names.get(0), selectedViewHolder.itemView.findViewById(R.id.thumbnail));
-                    }
-                });
+                // Map the first shared element name to the child ImageView.
+                sharedElements.put(names.get(0), selectedViewHolder.itemView.findViewById(R.id.thumbnail));
+            }
+        };
+
+        setExitSharedElementCallback(exitSharedElementCallback);
+
     }
+
 
     private void refresh() {
         getActivity().startService(new Intent(getActivity(), UpdaterService.class));
@@ -162,15 +173,8 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-        ArticleListAdapter articleListAdapter = new ArticleListAdapter(this, cursor);
-        articleListAdapter.setHasStableIds(true);
-        mRecyclerView.setAdapter(articleListAdapter);
-        int columnCount = getResources().getInteger(R.integer.list_column_count);
-        StaggeredGridLayoutManager layoutManager =
-                new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
-        mRecyclerView.setLayoutManager(layoutManager);
+        articleListAdapter.swapCursor(cursor);
         onReady(false);
-
     }
 
     @Override
