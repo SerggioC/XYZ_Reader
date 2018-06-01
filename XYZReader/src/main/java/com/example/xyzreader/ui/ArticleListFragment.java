@@ -91,8 +91,7 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        prepareTransitions();
-        postponeEnterTransition();
+
 
         getLoaderManager().initLoader(0, null, this);
 
@@ -174,6 +173,8 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
         articleListAdapter.swapCursor(cursor);
+        prepareTransitions();
+        postponeEnterTransition();
         onReady(false);
     }
 
