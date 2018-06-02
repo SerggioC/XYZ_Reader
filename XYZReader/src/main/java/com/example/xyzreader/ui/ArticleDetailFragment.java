@@ -128,6 +128,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         setUpToolbar();
         backIcon = mToolbar.getNavigationIcon();
+        getChildFragmentManager().popBackStack();
         titleView = rootView.findViewById(R.id.article_title);
         bylineView = rootView.findViewById(R.id.article_byline);
         mPhotoView = rootView.findViewById(R.id.photo);
@@ -140,6 +141,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     private void setUpToolbar() {
         setHasOptionsMenu(true);
         ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
+        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
+
+        mToolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
 
         // Show the Up button in the action bar.
         if (actionBar != null) {
@@ -147,7 +151,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setHomeButtonEnabled(true);
         }
-        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
     }
 
     private void setUpRecyclerView() {
@@ -226,7 +229,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             return;
         }
 
-        backIcon.setAlpha(0);
         backIcon.setVisible(true, true);
         backIcon.setAlpha(1);
         String title = mCursor.getString(ArticleLoader.Query.TITLE);

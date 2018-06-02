@@ -8,7 +8,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.SharedElementCallback;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
 import android.util.Log;
@@ -27,7 +26,6 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
     private static final int ALL_ARTICLES_LOADER_ID = 0;
 
     private ViewPager viewPager;
-    private View mUpButton;
     private FragmentPagerAdapter fragmentPagerAdapter;
     private ViewPager.OnPageChangeListener onPageChangeListener;
     private Cursor mCursor;
@@ -87,29 +85,6 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
                 }
             }
 
-            @Override
-            public void onPageScrollStateChanged(int state) {
-//                mUpButton.animate()
-//                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
-//                        .setDuration(300);
-            }
-
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                Log.w("Sergio>", this + "onPageScrolled: \n" +
-                        "position= " + position + "\n" +
-                        "positionOffSet= " + positionOffset + "\n" +
-                        "positionOffsetPixels= " + positionOffsetPixels);
-
-                Fragment currentFragment = (Fragment) viewPager.getAdapter().instantiateItem(viewPager, MainActivity.currentPosition);
-                View view = currentFragment.getView();
-                if (view == null) return;
-                ((Toolbar) view.findViewById(R.id.toolbar)).getNavigationIcon().setAlpha(Math.round(positionOffset * 255));
-
-                //mUpButton.setAlpha(positionOffset);
-                //mUpButton.setTranslationX(positionOffsetPixels);
-            }
         };
 
         viewPager.addOnPageChangeListener(onPageChangeListener);
