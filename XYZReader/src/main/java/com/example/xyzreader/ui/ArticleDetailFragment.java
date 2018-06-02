@@ -69,7 +69,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     private List<String> bodyDataList;
     private int dataListSize;
 
-
     private long mSelectedItemId;
     private View mUpButton;
     private TextView titleView;
@@ -99,7 +98,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_article_detail_page, container, false);
+
         bindTheViews(rootView);
+        setUpRecyclerView();
 
         Bundle arguments = getArguments();
         if (arguments.containsKey(ARG_ITEM_ID)) {
@@ -107,7 +108,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         }
 
         //mStartId = arguments.containsKey(ARTICLE_ITEM_ID) ? arguments.getLong(ARTICLE_ITEM_ID) : 0;
-
 
         bylineView.setMovementMethod(new LinkMovementMethod());
         shareFAB.setOnClickListener(view -> shareArticle());
@@ -118,28 +118,14 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             mSelectedItemId = MainActivity.currentItemId;
         }
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(rootView.getContext(), LinearLayoutManager.VERTICAL, false);
-        bodyDataRecyclerView.setLayoutManager(linearLayoutManager);
-        bodyDataRecyclerView.setHasFixedSize(false);
-
-        // Code to load more data incrementally and reduce start up time.
-        nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (scrollView, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            if ((scrollY >= (bodyDataRecyclerView.getMeasuredHeight() - scrollView.getMeasuredHeight())) && scrollY > oldScrollY) {
-                TO_INDEX += CHUNK_SIZE;
-                if (TO_INDEX >= dataListSize) TO_INDEX = dataListSize - 1;
-                redrawRecyclerViewSubList();
-            }
-        });
-
         getLoaderManager().initLoader(SINGLE_ARTICLE_LOADER_ID, null, this);
-
-
 
         return rootView;
     }
 
     private void bindTheViews(View rootView) {
         mToolbar = rootView.findViewById(R.id.toolbar);
+        actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         setUpToolbar();
         backIcon = mToolbar.getNavigationIcon();
         titleView = rootView.findViewById(R.id.article_title);
@@ -147,13 +133,8 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         mPhotoView = rootView.findViewById(R.id.photo);
         mPhotoContainerView = rootView.findViewById(R.id.photo_container);
         shareFAB = rootView.findViewById(R.id.share_fab);
-        bodyDataRecyclerView = rootView.findViewById(R.id.article_body_recyclerView);
         nestedScrollView = rootView.findViewById(R.id.nested_scrollview);
-        actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-
-        bodyDataRecyclerView.setAdapter(bodyDataAdapter);
-        bodyDataAdapter = new BodyDataAdapter(rootView.getContext());
-
+        bodyDataRecyclerView = rootView.findViewById(R.id.article_body_recyclerView);
     }
 
     private void setUpToolbar() {
@@ -167,7 +148,23 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             actionBar.setHomeButtonEnabled(true);
         }
         mToolbar.setNavigationIcon(R.drawable.ic_arrow_back);
+    }
 
+    private void setUpRecyclerView() {
+        bodyDataAdapter = new BodyDataAdapter(getContext());
+        bodyDataRecyclerView.setAdapter(bodyDataAdapter);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        bodyDataRecyclerView.setLayoutManager(linearLayoutManager);
+        bodyDataRecyclerView.setHasFixedSize(false);
+
+        // Code to load more data incrementally and reduce start up time.
+        nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (scrollView, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if ((scrollY >= (bodyDataRecyclerView.getMeasuredHeight() - scrollView.getMeasuredHeight())) && scrollY > oldScrollY) {
+                TO_INDEX += CHUNK_SIZE;
+                if (TO_INDEX >= dataListSize) TO_INDEX = dataListSize - 1;
+                redrawRecyclerViewSubList();
+            }
+        });
     }
 
     private void redrawRecyclerViewSubList() {
@@ -199,23 +196,19 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-
-        if (loader.getId() == SINGLE_ARTICLE_LOADER_ID) {
-            if (!isAdded()) {
-                if (cursor != null) cursor.close();
-                return;
-            }
-
-            mCursor = cursor;
-            if (mCursor != null && !mCursor.moveToFirst()) {
-                Log.e("Sergio> ", "Error reading item detail cursor");
-                mCursor.close();
-                mCursor = null;
-            }
-
-            updateViews();
+        if (!isAdded()) {
+            if (cursor != null) cursor.close();
+            return;
         }
 
+        mCursor = cursor;
+        if (mCursor != null && !mCursor.moveToFirst()) {
+            Log.e("Sergio> ", "Error reading item detail cursor");
+            mCursor.close();
+            mCursor = null;
+        }
+
+        updateViews();
     }
 
     @Override
@@ -224,12 +217,9 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         updateViews();
     }
 
-
     private void updateViews() {
-        //if (mRootView == null) return;
 
         if (mCursor == null) {
-            //mRootView.setVisibility(View.GONE);
             titleView.setText("N/A");
             bylineView.setText("N/A");
             bodyDataAdapter.swapBodyDataList(null);
@@ -272,11 +262,11 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
         String imageUrl = mCursor.getString(ArticleLoader.Query.PHOTO_URL);
 
-        // Just like we do when binding views at the grid, we set the transition name
-        // to be the image URL
+        // Just like we do when binding views at the grid,
+        // we set the transition name to be the image URL
         mPhotoView.setTransitionName(imageUrl);
 
-        ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
+        ImageLoaderHelper.getInstance(getContext()).getImageLoader()
                 .get(imageUrl, new ImageLoader.ImageListener() {
                     @Override
                     public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
@@ -290,7 +280,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                             mPhotoView.setImageBitmap(imageContainer.getBitmap());
                             mToolbar.setBackgroundColor(mMutedColor);
                         }
-                        // The postponeEnterTransition is called on the parent ImagePagerFragment, so the
+                        // The postponeEnterTransition is called on the parent ArticlePagerFragment, so the
                         // startPostponedEnterTransition() should also be called on it to get the transition
                         // going when the image is ready.
                         getParentFragment().startPostponedEnterTransition();
@@ -298,38 +288,46 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
                     @Override
                     public void onErrorResponse(VolleyError volleyError) {
-                        // The postponeEnterTransition is called on the parent ImagePagerFragment, so the
+                        // The postponeEnterTransition is called on the parent ArticlePagerFragment, so the
                         // startPostponedEnterTransition() should also be called on it to get the transition
                         // going in case of a failure.
                         getParentFragment().startPostponedEnterTransition();
                     }
                 });
 
-        postponeEnterTransition();
-//
-//        Glide.with(this).asBitmap().load(imageUrl)
-//                .listener(new RequestListener<Bitmap>() {
+
+//        Glide.with(this).load(imageUrl)
+//                .listener(new RequestListener<Drawable>() {
 //                    @Override
-//                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+//                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
 //                        mPhotoView.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.empty_detail));
+//                        // The postponeEnterTransition is called on the parent ArticlePagerFragment, so the
+//                        // startPostponedEnterTransition() should also be called on it to get the transition
+//                        // going when the image is ready.
+//                        getParentFragment().startPostponedEnterTransition();
 //                        return false;
 //                    }
 //
 //                    @Override
-//                    public boolean onResourceReady(Bitmap bitmap, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+//                    public boolean onResourceReady(Drawable bitmap, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
 //                        if (bitmap != null) {
 //                            Palette palette = new Palette
 //                                    .Builder(bitmap)
 //                                    .maximumColorCount(16)
 //                                    .generate();
 //                            mMutedColor = palette.getDarkMutedColor(0xFF333333);
+//                            mPhotoView.setImageDrawable(bitmap);
 //                            mPhotoView.setImageBitmap(bitmap);
-//                            mRootView.findViewById(R.id.toolbar).setBackgroundColor(mMutedColor);
+//                            mToolbar.setBackgroundColor(mMutedColor);
 //                        }
+//                        // The postponeEnterTransition is called on the parent ArticlePagerFragment, so the
+//                        // startPostponedEnterTransition() should also be called on it to get the transition
+//                        // going when the image is ready.
+//                        getParentFragment().startPostponedEnterTransition();
 //                        return false;
 //                    }
 //
-//                }).into(mPhotoView);
+//                }).into(mPhotoView)
 
     }
 

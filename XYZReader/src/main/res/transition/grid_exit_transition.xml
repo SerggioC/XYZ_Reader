@@ -17,14 +17,17 @@
 
 <transitionSet
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="375"
-    android:startDelay="25"
+    android:duration="@integer/transition_duration"
     android:interpolator="@android:interpolator/fast_out_slow_in"
+    android:startDelay="@integer/transition_delay"
     android:transitionOrdering="together">
+
     <fade>
         <targets android:targetId="@id/grid_card_view_item"/>
     </fade>
+
     <changeClipBounds/>
     <changeTransform/>
     <changeBounds/>
+
 </transitionSet>

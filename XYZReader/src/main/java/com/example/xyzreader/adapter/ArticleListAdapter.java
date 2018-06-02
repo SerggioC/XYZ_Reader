@@ -101,7 +101,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
             // instead of fading out with the rest to prevent an overlapping animation of fade and move).
             ((android.transition.TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
 
-            DynamicHeightNetworkImageView transitioningView = view.findViewById(R.id.thumbnail);
+            DynamicHeightNetworkImageView transitioningView = view.findViewById(R.id.grid_thumbnail);
 
 //            ArticleDetailFragment articleDetailFragment = new ArticleDetailFragment();
 //            Bundle bundle = new Bundle();
@@ -203,7 +203,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
             super(itemView);
             this.glideManager = glideManager;
             this.viewHolderListener = viewHolderListener;
-            thumbnailImageView = itemView.findViewById(R.id.thumbnail);
+            thumbnailImageView = itemView.findViewById(R.id.grid_thumbnail);
             titleView = itemView.findViewById(R.id.article_title);
             subtitleView = itemView.findViewById(R.id.article_subtitle);
             itemView.setOnClickListener(this);

@@ -91,13 +91,7 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
 
-
-
         getLoaderManager().initLoader(0, null, this);
-
-        if (savedInstanceState == null) {
-            refresh();
-        }
 
         return rootView;
     }
@@ -144,14 +138,13 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
             public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
                 super.onMapSharedElements(names, sharedElements);
                 // Locate the ViewHolder for the clicked position.
-                RecyclerView.ViewHolder selectedViewHolder = mRecyclerView
-                        .findViewHolderForAdapterPosition(MainActivity.currentPosition);
+                RecyclerView.ViewHolder selectedViewHolder = mRecyclerView.findViewHolderForAdapterPosition(MainActivity.currentPosition);
                 if (selectedViewHolder == null || selectedViewHolder.itemView == null) {
                     return;
                 }
 
                 // Map the first shared element name to the child ImageView.
-                sharedElements.put(names.get(0), selectedViewHolder.itemView.findViewById(R.id.thumbnail));
+                sharedElements.put(names.get(0), selectedViewHolder.itemView.findViewById(R.id.grid_thumbnail));
             }
         };
 

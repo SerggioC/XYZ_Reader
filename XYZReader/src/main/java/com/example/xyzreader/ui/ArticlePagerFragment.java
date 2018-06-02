@@ -1,17 +1,14 @@
 package com.example.xyzreader.ui;
 
-import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Matrix;
-import android.graphics.RectF;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.SharedElementCallback;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.Toolbar;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
 import android.util.Log;
@@ -54,7 +51,7 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
         View mRootView = inflater.inflate(R.layout.fragment_viewpager, container, false);
 
         setupViewPager(mRootView);
-        prepareSharedElementTransition();
+        prepareEnterSharedElementTransition();
 
         // Avoid a postponeEnterTransition on orientation change, and postpone only of first creation.
         if (savedInstanceState == null) {
@@ -105,6 +102,11 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
                         "positionOffSet= " + positionOffset + "\n" +
                         "positionOffsetPixels= " + positionOffsetPixels);
 
+                Fragment currentFragment = (Fragment) viewPager.getAdapter().instantiateItem(viewPager, MainActivity.currentPosition);
+                View view = currentFragment.getView();
+                if (view == null) return;
+                ((Toolbar) view.findViewById(R.id.toolbar)).getNavigationIcon().setAlpha(Math.round(positionOffset * 255));
+
                 //mUpButton.setAlpha(positionOffset);
                 //mUpButton.setTranslationX(positionOffsetPixels);
             }
@@ -126,23 +128,22 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        mCursor = cursor;
 
-        if (loader.getId() == ALL_ARTICLES_LOADER_ID) {
-            mCursor = cursor;
-
-            // Select the start ID
-            mCursor.moveToFirst();
-            int position = 0;
-            while (cursor.moveToNext()) {
-                long itemId = cursor.getLong(ArticleLoader.Query._ID);
-                if (itemId == mStartId) {
-                    position = cursor.getPosition();
-                    MainActivity.currentPosition = position;
-                    MainActivity.currentItemId = itemId;
-                }
+        // Select the start ID
+        mCursor.moveToFirst();
+        int position = 0;
+        while (cursor.moveToNext()) {
+            long itemId = cursor.getLong(ArticleLoader.Query._ID);
+            if (itemId == mStartId) {
+                position = cursor.getPosition();
+                MainActivity.currentPosition = position;
+                MainActivity.currentItemId = itemId;
             }
-            updateViewPager(cursor, position);
         }
+        updateViewPager(cursor, position);
+        prepareEnterSharedElementTransition();
+
     }
 
     @Override
@@ -168,44 +169,12 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
     /**
      * Prepares the shared element transition from and back to the grid fragment.
      */
-    private void prepareSharedElementTransition() {
+    private void prepareEnterSharedElementTransition() {
         Transition transition = TransitionInflater.from(getContext()).inflateTransition(R.transition.image_shared_element_transition);
-        int duration = getActivity().getResources().getInteger(R.integer.transition_duration);
-        transition.setDuration(duration);
         setSharedElementEnterTransition(transition);
 
         // A similar mapping is set at the ArticleListFragment with a setExitSharedElementCallback.
         setEnterSharedElementCallback(new SharedElementCallback() {
-
-            @Override
-            public void onSharedElementStart(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
-                super.onSharedElementStart(sharedElementNames, sharedElements, sharedElementSnapshots);
-            }
-
-            @Override
-            public void onSharedElementEnd(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
-                super.onSharedElementEnd(sharedElementNames, sharedElements, sharedElementSnapshots);
-            }
-
-            @Override
-            public void onRejectSharedElements(List<View> rejectedSharedElements) {
-                super.onRejectSharedElements(rejectedSharedElements);
-            }
-
-            @Override
-            public Parcelable onCaptureSharedElementSnapshot(View sharedElement, Matrix viewToGlobalMatrix, RectF screenBounds) {
-                return super.onCaptureSharedElementSnapshot(sharedElement, viewToGlobalMatrix, screenBounds);
-            }
-
-            @Override
-            public View onCreateSnapshotView(Context context, Parcelable snapshot) {
-                return super.onCreateSnapshotView(context, snapshot);
-            }
-
-            @Override
-            public void onSharedElementsArrived(List<String> sharedElementNames, List<View> sharedElements, OnSharedElementsReadyListener listener) {
-                super.onSharedElementsArrived(sharedElementNames, sharedElements, listener);
-            }
 
             @Override
             public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
@@ -213,8 +182,7 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
                 // visible). To locate the fragment, call instantiateItem with the selection position.
                 // At this stage, the method will simply return the fragment at the position and will
                 // not create a new one.
-                Fragment currentFragment = (Fragment) viewPager.getAdapter()
-                        .instantiateItem(viewPager, MainActivity.currentPosition);
+                Fragment currentFragment = (Fragment) viewPager.getAdapter().instantiateItem(viewPager, MainActivity.currentPosition);
                 View view = currentFragment.getView();
                 if (view == null) {
                     return;
