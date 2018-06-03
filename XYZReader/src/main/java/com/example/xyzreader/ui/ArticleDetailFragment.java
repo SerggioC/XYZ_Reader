@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A fragment representing a single Article detail screen.
@@ -70,7 +71,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     private int dataListSize;
 
     private long mSelectedItemId;
-    private View mUpButton;
     private TextView titleView;
     private TextView bylineView;
     private Toolbar mToolbar;
@@ -107,8 +107,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             mItemId = arguments.getLong(ARG_ITEM_ID);
         }
 
-        //mStartId = arguments.containsKey(ARTICLE_ITEM_ID) ? arguments.getLong(ARTICLE_ITEM_ID) : 0;
-
         bylineView.setMovementMethod(new LinkMovementMethod());
         shareFAB.setOnClickListener(view -> shareArticle());
 
@@ -128,7 +126,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         setUpToolbar();
         backIcon = mToolbar.getNavigationIcon();
-        getChildFragmentManager().popBackStack();
         titleView = rootView.findViewById(R.id.article_title);
         bylineView = rootView.findViewById(R.id.article_byline);
         mPhotoView = rootView.findViewById(R.id.photo);
@@ -336,7 +333,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
 
     private void shareArticle() {
         startActivity(Intent
-                .createChooser(ShareCompat.IntentBuilder.from(getActivity())
+                .createChooser(ShareCompat.IntentBuilder.from(Objects.requireNonNull(getActivity()))
                         .setType("text/plain")
                         .setText("Some sample text")
                         .getIntent(), getString(R.string.action_share)));

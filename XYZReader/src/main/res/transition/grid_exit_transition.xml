@@ -19,15 +19,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:duration="@integer/transition_duration"
     android:interpolator="@android:interpolator/fast_out_slow_in"
-    android:startDelay="@integer/transition_delay"
-    android:transitionOrdering="together">
+    android:startDelay="@integer/transition_delay">
 
     <fade>
         <targets android:targetId="@id/grid_card_view_item"/>
     </fade>
-
-    <changeClipBounds/>
-    <changeTransform/>
-    <changeBounds/>
 
 </transitionSet>

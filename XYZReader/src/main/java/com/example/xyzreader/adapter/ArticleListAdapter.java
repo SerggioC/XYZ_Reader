@@ -28,7 +28,7 @@ import com.bumptech.glide.request.target.Target;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.ui.ArticlePagerFragment;
-import com.example.xyzreader.ui.DynamicHeightNetworkImageView;
+import com.example.xyzreader.ui.AspectRatioImageView;
 import com.example.xyzreader.ui.MainActivity;
 
 import java.text.ParseException;
@@ -54,7 +54,6 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
     public void swapCursor(Cursor cursor) {
         this.mCursor = cursor;
     }
-
 
     /**
      * A listener that is attached to all ViewHolders
@@ -101,17 +100,11 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
             // instead of fading out with the rest to prevent an overlapping animation of fade and move).
             ((android.transition.TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
 
-            DynamicHeightNetworkImageView transitioningView = view.findViewById(R.id.grid_thumbnail);
-
-//            ArticleDetailFragment articleDetailFragment = new ArticleDetailFragment();
-//            Bundle bundle = new Bundle();
-//            bundle.putLong(ARTICLE_ITEM_ID, itemId);
-//            articleDetailFragment.setArguments(bundle);
-
+            AspectRatioImageView transitioningView = view.findViewById(R.id.grid_thumbnail);
 
             fragment.getFragmentManager()
                     .beginTransaction()
-                    //.setReorderingAllowed(true) // Optimize for shared element transition, CRASHING with this line!!
+                    .setReorderingAllowed(true) // Optimize for shared element transition.
                     .addSharedElement(transitioningView, transitioningView.getTransitionName())
                     .replace(R.id.fragment_container, new ArticlePagerFragment(), ArticlePagerFragment.class.getSimpleName())
                     .addToBackStack(null)
@@ -195,7 +188,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         RequestManager glideManager;
         ViewHolderListener viewHolderListener;
-        DynamicHeightNetworkImageView thumbnailImageView;
+        AspectRatioImageView thumbnailImageView;
         TextView titleView;
         TextView subtitleView;
 
