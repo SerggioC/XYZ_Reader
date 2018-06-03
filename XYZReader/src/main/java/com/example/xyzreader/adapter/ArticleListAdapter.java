@@ -16,6 +16,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -139,6 +141,8 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         int adapterPosition = viewHolder.getAdapterPosition();
         mCursor.moveToPosition(adapterPosition);
 
+        animateItemViewSlideFromBottom(viewHolder.itemView, 50 * position);
+
         viewHolder.titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
 
         Date publishedDate = parsePublishedDate();
@@ -178,6 +182,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         viewHolder.thumbnailImageView.setAspectRatio(aspectRatio);
         viewHolder.thumbnailImageView.setTransitionName(imageUrl);
 
+
     }
 
     @Override
@@ -206,6 +211,12 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         public void onClick(View view) {
             viewHolderListener.onItemClicked(view, getAdapterPosition());
         }
+    }
+
+    static void animateItemViewSlideFromBottom(View viewToAnimate, long timeOffSet) {
+        Animation bottomAnimation = AnimationUtils.loadAnimation(viewToAnimate.getContext(), R.anim.item_animation_slide_from_bottom);
+        bottomAnimation.setStartOffset(timeOffSet);
+        viewToAnimate.startAnimation(bottomAnimation);
     }
 
 }

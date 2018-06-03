@@ -18,8 +18,7 @@
 <transitionSet
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:duration="@integer/transition_duration"
-    android:interpolator="@android:interpolator/fast_out_slow_in"
-    android:startDelay="@integer/transition_delay">
+    android:interpolator="@android:interpolator/fast_out_slow_in">
 
     <fade>
         <targets android:targetId="@id/grid_card_view_item"/>
