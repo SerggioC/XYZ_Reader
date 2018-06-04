@@ -29,20 +29,7 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
     private FragmentPagerAdapter fragmentPagerAdapter;
     private ViewPager.OnPageChangeListener onPageChangeListener;
     private Cursor mCursor;
-    private long mSelectedItemId;
     private long mStartId;
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        // In support library r8, calling initLoader for a fragment in a FragmentPagerAdapter in
-        // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
-        // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
-        // we do this in onActivityCreated.
-        //getLoaderManager().initLoader(ALL_ARTICLES_LOADER_ID, null, this);
-
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -56,10 +43,6 @@ public class ArticlePagerFragment extends Fragment implements LoaderManager.Load
             postponeEnterTransition();
             mStartId = MainActivity.currentItemId;
         }
-
-        // Get back to the Article list
-//        mUpButton = mRootView.findViewById(R.id.action_up);
-//        mUpButton.setOnClickListener(view -> getChildFragmentManager().popBackStack());
 
         getLoaderManager().initLoader(ALL_ARTICLES_LOADER_ID, null, this);
 

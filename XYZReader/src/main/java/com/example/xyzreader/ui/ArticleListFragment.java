@@ -148,6 +148,7 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
 
         setExitSharedElementCallback(exitSharedElementCallback);
 
+        postponeEnterTransition();
     }
 
 
@@ -165,7 +166,6 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
         articleListAdapter.swapCursor(cursor);
         prepareTransitions();
-        postponeEnterTransition();
         onReady(false);
     }
 

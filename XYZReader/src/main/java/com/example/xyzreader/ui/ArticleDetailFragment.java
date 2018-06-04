@@ -226,39 +226,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             return;
         }
 
-        backIcon.setVisible(true, true);
-        backIcon.setAlpha(1);
-        String title = mCursor.getString(ArticleLoader.Query.TITLE);
-        titleView.setText(title);
-
-        Date publishedDate = parsePublishedDate();
-        Spanned fromHtml;
-        if (!publishedDate.before(START_OF_EPOCH.getTime())) {
-            fromHtml = Html.fromHtml(
-                    DateUtils.getRelativeTimeSpanString(
-                            publishedDate.getTime(),
-                            System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
-                            DateUtils.FORMAT_ABBREV_ALL).toString()
-                            + " by <font color='#ffffff'>"
-                            + mCursor.getString(ArticleLoader.Query.AUTHOR)
-                            + "</font>");
-
-        } else {
-            // If date is before 1902, just show the string
-            fromHtml = Html.fromHtml(
-                    outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
-                            + mCursor.getString(ArticleLoader.Query.AUTHOR)
-                            + "</font>");
-        }
-
-        bylineView.setText(fromHtml);
-
-        String bodyData = mCursor.getString(ArticleLoader.Query.BODY);
-        bodyDataList = Arrays.asList(bodyData.split("(\r\n\r\n)"));
-        dataListSize = bodyDataList.size();
-
-        redrawRecyclerViewSubList();
-
         String imageUrl = mCursor.getString(ArticleLoader.Query.PHOTO_URL);
 
         // Just like we do when binding views at the grid,
@@ -293,6 +260,39 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                         getParentFragment().startPostponedEnterTransition();
                     }
                 });
+
+        backIcon.setVisible(true, true);
+        backIcon.setAlpha(1);
+        String title = mCursor.getString(ArticleLoader.Query.TITLE);
+        titleView.setText(title);
+
+        Date publishedDate = parsePublishedDate();
+        Spanned fromHtml;
+        if (!publishedDate.before(START_OF_EPOCH.getTime())) {
+            fromHtml = Html.fromHtml(
+                    DateUtils.getRelativeTimeSpanString(
+                            publishedDate.getTime(),
+                            System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+                            DateUtils.FORMAT_ABBREV_ALL).toString()
+                            + " by <font color='#ffffff'>"
+                            + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                            + "</font>");
+
+        } else {
+            // If date is before 1902, just show the string
+            fromHtml = Html.fromHtml(
+                    outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
+                            + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                            + "</font>");
+        }
+
+        bylineView.setText(fromHtml);
+
+        String bodyData = mCursor.getString(ArticleLoader.Query.BODY);
+        bodyDataList = Arrays.asList(bodyData.split("(\r\n\r\n)"));
+        dataListSize = bodyDataList.size();
+
+        redrawRecyclerViewSubList();
 
 
 //        Glide.with(this).load(imageUrl)

@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Bacon" parent="@style/Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.XYZApp" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@color/primary_dark</item>
         <item name="android:navigationBarColor">@color/primary_color</item>
         <item name="android:fontFamily">@font/rosario_regular</item>
-    </style>
-
-    <style name="Theme.Bacon.Detail">
-        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="subtitle_text_style">

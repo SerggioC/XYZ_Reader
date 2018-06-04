@@ -21,25 +21,25 @@
         android:interpolator="@android:interpolator/decelerate_cubic"
         />
 
-    <!--<scale-->
-        <!--android:fromXScale="0%"-->
-        <!--android:fromYScale="0%"-->
-        <!--android:interpolator="@android:interpolator/linear"-->
-        <!--android:pivotX="50%"-->
-        <!--android:pivotY="50%"-->
-        <!--android:toXScale="105%"-->
-        <!--android:toYScale="105%"-->
-        <!--/>-->
+    <scale
+        android:fromXScale="0%"
+        android:fromYScale="0%"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="105%"
+        android:toYScale="105%"
+        />
 
-    <!--<scale-->
-        <!--android:fromXScale="105%"-->
-        <!--android:fromYScale="105%"-->
-        <!--android:interpolator="@android:interpolator/decelerate_cubic"-->
-        <!--android:pivotX="50%"-->
-        <!--android:pivotY="50%"-->
-        <!--android:toXScale="100%"-->
-        <!--android:toYScale="100%"-->
-        <!--/>-->
+    <scale
+        android:fromXScale="105%"
+        android:fromYScale="105%"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="100%"
+        android:toYScale="100%"
+        />
 
 
 </set>
