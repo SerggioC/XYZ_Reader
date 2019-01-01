@@ -19,6 +19,7 @@
     android:duration="@integer/transition_duration"
     android:interpolator="@android:interpolator/linear_out_slow_in"
     android:transitionOrdering="together">
+  <changeImageTransform/>
   <changeClipBounds/>
   <changeTransform/>
   <changeBounds/>

@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.ViewHolder> {
     private final RequestManager glideManager;
+    private final ViewHolderListener viewHolderListener;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
@@ -53,65 +54,14 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         this.viewHolderListener = new ViewHolderListenerImpl(fragment);
     }
 
+    static void animateItemViewSlideFromBottom(View viewToAnimate, long timeOffSet) {
+        Animation bottomAnimation = AnimationUtils.loadAnimation(viewToAnimate.getContext(), R.anim.item_animation_slide_from_bottom);
+        bottomAnimation.setStartOffset(timeOffSet);
+        viewToAnimate.startAnimation(bottomAnimation);
+    }
+
     public void swapCursor(Cursor cursor) {
         this.mCursor = cursor;
-    }
-
-    /**
-     * A listener that is attached to all ViewHolders
-     * to handle image loading events and view clicks.
-     */
-    private interface ViewHolderListener {
-        void onLoadCompleted(ImageView view, int adapterPosition);
-        void onItemClicked(View view, int adapterPosition);
-    }
-
-    private final ViewHolderListener viewHolderListener;
-
-    private class ViewHolderListenerImpl implements ViewHolderListener {
-        private Fragment fragment;
-        private AtomicBoolean enterTransitionStarted;
-
-        ViewHolderListenerImpl(Fragment fragment) {
-            this.fragment = fragment;
-            this.enterTransitionStarted = new AtomicBoolean();
-        }
-
-        @Override
-        public void onLoadCompleted(ImageView view, int adapterPosition) {
-            if (MainActivity.currentPosition != adapterPosition) return;
-            if (enterTransitionStarted.getAndSet(true)) return;
-            fragment.startPostponedEnterTransition();
-        }
-
-        @Override
-        public void onItemClicked(View view, int adapterPosition) {
-            // Update the position.
-            MainActivity.currentPosition = adapterPosition;
-
-            // Update the corresponding Item ID
-            MainActivity.currentItemId = getItemId(adapterPosition);
-
-            // Create circular reveal animation on item click
-            int finalRadius = (int) Math.hypot(view.getWidth() / 2, view.getHeight() / 2);
-            Animator circularReveal = ViewAnimationUtils.createCircularReveal(view, view.getWidth() / 2, view.getHeight() / 2, 0, finalRadius);
-            circularReveal.setDuration(100);
-            circularReveal.start();
-
-            // Exclude the clicked card from the exit transition (e.g. the card will disappear immediately
-            // instead of fading out with the rest to prevent an overlapping animation of fade and move).
-            ((android.transition.TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
-
-            AspectRatioImageView transitioningView = view.findViewById(R.id.grid_thumbnail);
-
-            fragment.getFragmentManager()
-                    .beginTransaction()
-                    .setReorderingAllowed(true) // Optimize for shared element transition.
-                    .addSharedElement(transitioningView, transitioningView.getTransitionName())
-                    .replace(R.id.fragment_container, new ArticlePagerFragment(), ArticlePagerFragment.class.getSimpleName())
-                    .addToBackStack(null)
-                    .commit();
-        }
     }
 
     @Override
@@ -149,33 +99,21 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         Spanned fromHtml;
         if (!publishedDate.before(START_OF_EPOCH.getTime())) {
             fromHtml = Html.fromHtml(DateUtils.getRelativeTimeSpanString(
-                            publishedDate.getTime(),
-                            System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
-                            DateUtils.FORMAT_ABBREV_ALL).toString()
-                            + "<br/>" + " by "
-                            + mCursor.getString(ArticleLoader.Query.AUTHOR));
+                    publishedDate.getTime(),
+                    System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+                    DateUtils.FORMAT_ABBREV_ALL).toString()
+                    + "<br/>" + " by "
+                    + mCursor.getString(ArticleLoader.Query.AUTHOR));
         } else {
             fromHtml = Html.fromHtml(outputFormat.format(publishedDate)
-                            + "<br/>" + " by "
-                            + mCursor.getString(ArticleLoader.Query.AUTHOR));
+                    + "<br/>" + " by "
+                    + mCursor.getString(ArticleLoader.Query.AUTHOR));
         }
         viewHolder.subtitleView.setText(fromHtml);
 
         String imageUrl = mCursor.getString(ArticleLoader.Query.THUMB_URL);
         glideManager.load(imageUrl)
-                .listener(new RequestListener<Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        viewHolderListener.onLoadCompleted(viewHolder.thumbnailImageView, adapterPosition);
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        viewHolderListener.onLoadCompleted(viewHolder.thumbnailImageView, adapterPosition);
-                        return false;
-                    }
-                })
+                .listener(getRequestListener(viewHolder, adapterPosition))
                 .into(viewHolder.thumbnailImageView);
 
         float aspectRatio = mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO);
@@ -185,9 +123,84 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
 
     }
 
+    @NonNull
+    private RequestListener<Drawable> getRequestListener(@NonNull ViewHolder viewHolder, int adapterPosition) {
+        return new RequestListener<Drawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                viewHolderListener.onLoadCompleted(viewHolder.thumbnailImageView, adapterPosition);
+                return false;
+            }
+
+            @Override
+            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                viewHolderListener.onLoadCompleted(viewHolder.thumbnailImageView, adapterPosition);
+                return false;
+            }
+        };
+    }
+
     @Override
     public int getItemCount() {
         return mCursor != null ? mCursor.getCount() : 0;
+    }
+
+    /**
+     * A listener that is attached to all ViewHolders
+     * to handle image loading events and view clicks.
+     */
+    private interface ViewHolderListener {
+        void onLoadCompleted(ImageView view, int adapterPosition);
+
+        void onItemClicked(View view, int adapterPosition);
+    }
+
+    private class ViewHolderListenerImpl implements ViewHolderListener {
+        private Fragment fragment;
+        private AtomicBoolean enterTransitionStarted;
+
+        ViewHolderListenerImpl(Fragment fragment) {
+            this.fragment = fragment;
+            this.enterTransitionStarted = new AtomicBoolean();
+        }
+
+        @Override
+        public void onLoadCompleted(ImageView view, int adapterPosition) {
+            if (MainActivity.currentPosition != adapterPosition) return;
+            if (enterTransitionStarted.getAndSet(true)) return;
+            fragment.startPostponedEnterTransition();
+            fragment.postponeEnterTransition();
+        }
+
+        @Override
+        public void onItemClicked(View view, int adapterPosition) {
+            // Update the position.
+            MainActivity.currentPosition = adapterPosition;
+
+            // Update the corresponding Item ID
+            MainActivity.currentItemId = getItemId(adapterPosition);
+
+            // Create circular reveal animation on item click
+            int finalRadius = (int) Math.hypot(view.getWidth() / 2, view.getHeight() / 2);
+            Animator circularReveal = ViewAnimationUtils
+                    .createCircularReveal(view, view.getWidth() / 2, view.getHeight() / 2, 0, finalRadius);
+            circularReveal.setDuration(100);
+            circularReveal.start();
+
+            // Exclude the clicked card from the exit transition (e.g. the card will disappear immediately
+            // instead of fading out with the rest to prevent an overlapping animation of fade and move).
+            ((android.transition.TransitionSet) fragment.getExitTransition()).excludeTarget(view, true);
+
+            AspectRatioImageView transitioningView = view.findViewById(R.id.grid_thumbnail);
+
+            fragment.getFragmentManager()
+                    .beginTransaction()
+                    .setReorderingAllowed(true) // Optimize for shared element transition.
+                    .addSharedElement(transitioningView, transitioningView.getTransitionName())
+                    .replace(R.id.fragment_container, new ArticlePagerFragment(), ArticlePagerFragment.class.getSimpleName())
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -211,12 +224,6 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         public void onClick(View view) {
             viewHolderListener.onItemClicked(view, getAdapterPosition());
         }
-    }
-
-    static void animateItemViewSlideFromBottom(View viewToAnimate, long timeOffSet) {
-        Animation bottomAnimation = AnimationUtils.loadAnimation(viewToAnimate.getContext(), R.anim.item_animation_slide_from_bottom);
-        bottomAnimation.setStartOffset(timeOffSet);
-        viewToAnimate.startAnimation(bottomAnimation);
     }
 
 }

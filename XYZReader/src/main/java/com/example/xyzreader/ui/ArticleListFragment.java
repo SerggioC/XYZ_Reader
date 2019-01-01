@@ -79,6 +79,7 @@ public class ArticleListFragment extends Fragment implements android.support.v4.
 
         mSwipeRefreshLayout = rootView.findViewById(R.id.swipe_refresh_layout);
         mSwipeRefreshLayout.setRefreshing(true);
+        mSwipeRefreshLayout.setOnRefreshListener(this::refresh);
 
         mRecyclerView = rootView.findViewById(R.id.recycler_view);
 

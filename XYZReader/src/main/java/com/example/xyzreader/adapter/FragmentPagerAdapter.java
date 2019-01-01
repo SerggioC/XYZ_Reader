@@ -1,6 +1,7 @@
 package com.example.xyzreader.adapter;
 
 import android.database.Cursor;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.ViewGroup;
 
@@ -28,6 +29,7 @@ public class FragmentPagerAdapter extends android.support.v4.app.FragmentPagerAd
         return ArticleDetailFragment.newInstance(id);
     }
 
+    @NonNull
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         return super.instantiateItem(container, position);
